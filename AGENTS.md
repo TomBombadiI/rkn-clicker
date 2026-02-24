@@ -83,5 +83,12 @@ Examples:
   - non-functional refactors with no behavior change,
   - temporary debug changes (must be removed before merge).
 
+## Test Placement
+- Keep all tests under `src/tests` only (do not colocate test files in feature/runtime folders).
+- Mirror runtime structure inside `src/tests`:
+  - `src/tests/engine/*` for engine/domain tests,
+  - `src/tests/ui/*` for UI/component tests.
+- Shared test setup lives in `src/tests/setup.ts`.
+
 If tests are skipped, include one line in PR/review note:
 - `Tests: skipped (reason: <short reason>)`
