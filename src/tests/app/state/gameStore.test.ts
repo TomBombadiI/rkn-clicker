@@ -44,4 +44,26 @@ describe("gameStore", () => {
     expect(saved.basePassiveIncome).toBe(10);
     expect(saved.serviceProgresses.telegram).toBe("slowed");
   });
+
+  it("does not apply new block multiplier retroactively when buying ban mid-tick (regression guard)", () => {
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 20,
+        basePassiveIncome: 10,
+        lastTickAt: 0,
+      },
+    }));
+
+    useGameStore.getState().buyBan("telegram", 100);
+
+    const gameAfterPurchase = useGameStore.getState().game;
+    expect(gameAfterPurchase.score).toBe(1);
+    expect(gameAfterPurchase.blockMultiplier).toBe(2);
+    expect(gameAfterPurchase.lastTickAt).toBe(100);
+
+    useGameStore.getState().tick(250);
+
+    expect(useGameStore.getState().game.score).toBe(4);
+  });
 });

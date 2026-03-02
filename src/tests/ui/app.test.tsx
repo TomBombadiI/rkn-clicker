@@ -72,4 +72,20 @@ describe('App smoke', () => {
     expect(savedAfterReset).not.toBeNull();
     expect(JSON.parse(savedAfterReset ?? "{}").score).toBe(0);
   });
+
+  it('buys ban for the first service and updates multiplier and dissent', () => {
+    render(<App />);
+
+    for (let i = 0; i < 20; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /заблокировать telegram/i }));
+
+    expect(screen.getByText(/множитель блокировок: x2/i)).toBeInTheDocument();
+    expect(screen.getByText(/народное недовольство: 25%/i)).toBeInTheDocument();
+    expect(screen.getByText(/статус: banned/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /заблокировать telegram/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
+  });
 });
