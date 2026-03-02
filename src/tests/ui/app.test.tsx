@@ -1,11 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import App from "../../App";
 
 describe('App smoke', () => {
-  it('renders main heading', () => {
+  it('opens settings dialog from top bar', () => {
     render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));
+
+    expect(screen.getByRole('heading', { name: /настройки/i })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /vite \+ react/i })
+      screen.getByText(/закладываем рабочий каркас окна/i)
     ).toBeInTheDocument();
-  })
+  });
 });

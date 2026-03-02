@@ -1,0 +1,45 @@
+@use "@/styles/helpers" as *;
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(9 14 24 / 60%);
+  backdrop-filter: blur(4px);
+}
+
+.content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: min(92vw, 420px);
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #172233 0%, #101824 100%);
+  box-shadow: 0 20px 80px rgb(0 0 0 / 35%);
+  transform: translate(-50%, -50%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 4%);
+}
+
+@media (max-width: 640px) {
+  .content {
+    width: min(94vw, 420px);
+    padding: 16px;
+  }
+}

@@ -1,0 +1,5 @@
+.root {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  gap: 1rem;
+}
