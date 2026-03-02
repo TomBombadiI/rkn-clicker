@@ -1,0 +1,9 @@
+@use '@a1rth/css-normalize';
+@use "./styles/variables.scss";
+
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
