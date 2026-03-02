@@ -26,8 +26,8 @@ type GameStore = {
   game: GameState;
   click: () => void;
   tick: (now?: number) => void;
-  buySlow: (serviceId: ServiceId) => void;
-  buyBan: (serviceId: ServiceId) => void;
+  buySlow: (serviceId: ServiceId, now?: number) => void;
+  buyBan: (serviceId: ServiceId, now?: number) => void;
   reset: (now?: number) => void;
 };
 
@@ -46,12 +46,15 @@ export const useGameStore = create<GameStore>((set) => ({
     }));
   },
 
-  buySlow: (serviceId) => {
+  buySlow: (serviceId, now = Date.now()) => {
     set((state) => {
-      const result = buySlow(state.game, serviceId);
+      const settledGame = applyTick(state.game, now);
+      const result = buySlow(settledGame, serviceId);
 
       if (!result.ok) {
-        return state;
+        return {
+          game: settledGame,
+        };
       }
 
       return {
@@ -60,12 +63,15 @@ export const useGameStore = create<GameStore>((set) => ({
     });
   },
 
-  buyBan: (serviceId) => {
+  buyBan: (serviceId, now = Date.now()) => {
     set((state) => {
-      const result = buyBan(state.game, serviceId);
+      const settledGame = applyTick(state.game, now);
+      const result = buyBan(settledGame, serviceId);
 
       if (!result.ok) {
-        return state;
+        return {
+          game: settledGame,
+        };
       }
 
       return {
