@@ -1,2 +1,23 @@
 .root {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgb(17 24 39 / 12%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 85%);
+}
+
+.header {
+  display: grid;
+  gap: 4px;
+}
+
+.actions {
+  display: grid;
+  gap: 12px;
+}
+
+.actionBlock {
+  display: grid;
+  gap: 6px;
 }

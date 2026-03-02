@@ -1,4 +1,5 @@
 export {
+  getServiceCards,
   selectBlockMultiplier,
   selectDissentPercent,
   selectGame,
@@ -6,3 +7,4 @@ export {
   selectScore,
   useGameStore,
 } from "./gameStore";
+export type { ServiceCardView } from "./gameStore";

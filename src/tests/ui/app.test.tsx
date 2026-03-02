@@ -13,7 +13,7 @@ describe('App smoke', () => {
 
     expect(screen.getByText(/очки блокировки: 0/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /блокировать/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
 
     expect(screen.getByText(/очки блокировки: 1/i)).toBeInTheDocument();
   });
@@ -27,5 +27,19 @@ describe('App smoke', () => {
     expect(
       screen.getByText(/закладываем рабочий каркас окна/i)
     ).toBeInTheDocument();
+  });
+
+  it('buys slow for the first service and enables passive income', () => {
+    render(<App />);
+
+    for (let i = 0; i < 10; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /замедлить telegram/i }));
+
+    expect(screen.getByText(/доход в секунду: 10/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
+    expect(screen.getByText(/статус: slowed/i)).toBeInTheDocument();
   });
 });
