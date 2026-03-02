@@ -1,4 +1,4 @@
-import { getClickIncome, getEventMultipliers, getPassiveIncomePerSec } from "../../engine/calculations";
+import { getClickIncome, getEventMultipliers, getPassiveIncomePerSec, isEventActive } from "../../engine/calculations";
 import type { ActiveEvent, GameState } from "../../engine/types";
 
 function makeState(overrides: Partial<GameState> = {}): GameState {
@@ -42,6 +42,18 @@ describe("getEventMultipliers", () => {
       clickMultiplier: 1,
       passiveMultiplier: 1,
     });
+  });
+
+  it("returns false when event duration has ended (edge-case)", () => {
+    expect(
+      isEventActive(
+        makeEvent({
+          startedAt: 1_000,
+          durationMs: 500,
+        }),
+        1_500,
+      ),
+    ).toBe(false);
   });
 });
 

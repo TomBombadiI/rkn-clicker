@@ -4,6 +4,16 @@ import { createInitialState } from "../../engine/state";
 import type { GameState, SaveData, ServiceId, ServiceState } from "../../engine/types";
 
 const serviceStateSchema = z.enum(["none", "slowed", "banned"]);
+const activeEventSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  multipliers: z.object({
+    clickMultiplier: z.number().positive(),
+    passiveMultiplier: z.number().positive(),
+  }),
+  startedAt: z.number(),
+  durationMs: z.number().positive(),
+});
 
 const saveDataSchema = z.object({
   saveVersion: z.number().int(),
@@ -11,6 +21,7 @@ const saveDataSchema = z.object({
   clickPower: z.number().nonnegative(),
   basePassiveIncome: z.number().nonnegative(),
   blockMultiplier: z.number().positive(),
+  activeEvent: activeEventSchema.nullable(),
   serviceProgresses: z.record(z.string(), serviceStateSchema),
   bannedCount: z.number().int().nonnegative(),
   dissentPercent: z.number().int().min(0).max(100),
@@ -45,6 +56,7 @@ function toSaveData(game: GameState, now = Date.now()): SaveData {
     clickPower: game.clickPower,
     basePassiveIncome: game.basePassiveIncome,
     blockMultiplier: game.blockMultiplier,
+    activeEvent: game.activeEvent,
     serviceProgresses: game.serviceProgresses,
     bannedCount: game.bannedCount,
     dissentPercent: game.dissentPercent,
@@ -97,6 +109,7 @@ export function loadGame(now = Date.now()): GameState | null {
       clickPower: result.data.clickPower,
       basePassiveIncome: result.data.basePassiveIncome,
       blockMultiplier: result.data.blockMultiplier,
+      activeEvent: result.data.activeEvent,
       serviceProgresses,
       bannedCount,
       dissentPercent,

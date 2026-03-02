@@ -26,7 +26,7 @@ describe("gameStore", () => {
 
     useGameStore.getState().tick(250);
 
-    expect(useGameStore.getState().game.score).toBe(1.5);
+    expect(useGameStore.getState().game.score).toBe(3);
   });
 
   it("saves progress after a successful purchase (smoke)", () => {
@@ -42,6 +42,7 @@ describe("gameStore", () => {
     const saved = JSON.parse(savedRaw ?? "{}");
     expect(saved.score).toBe(0);
     expect(saved.basePassiveIncome).toBe(10);
+    expect(saved.activeEvent.name).toBe("Паника в сети");
     expect(saved.serviceProgresses.telegram).toBe("slowed");
   });
 
@@ -110,5 +111,23 @@ describe("gameStore", () => {
     const finishedGame = useGameStore.getState().game;
     expect(finishedGame.isFinished).toBe(true);
     expect(finishedGame.score).toBe(0);
+  });
+
+  it("starts and expires a purchase event that boosts passive income (regression guard)", () => {
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 10,
+      },
+    }));
+
+    useGameStore.getState().buySlow("telegram", 100);
+
+    expect(useGameStore.getState().game.activeEvent?.name).toBe("Паника в сети");
+    expect(useGameStore.getState().game.activeEvent?.multipliers.passiveMultiplier).toBe(2);
+
+    useGameStore.getState().tick(20_100);
+
+    expect(useGameStore.getState().game.activeEvent).toBeNull();
   });
 });

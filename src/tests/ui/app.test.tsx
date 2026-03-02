@@ -44,7 +44,9 @@ describe('App smoke', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /замедлить telegram/i }));
 
-    expect(screen.getByText(/доход в секунду: 10/i)).toBeInTheDocument();
+    expect(screen.getByText(/доход в секунду: 20/i)).toBeInTheDocument();
+    expect(screen.getByText(/паника в сети/i)).toBeInTheDocument();
+    expect(screen.getByText(/осталось: 20 сек/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
     expect(screen.getByText(/статус: slowed/i)).toBeInTheDocument();
   });

@@ -1,4 +1,4 @@
-import type { ServiceConfig } from "./types";
+import type { EventTemplate, ServiceConfig } from "./types";
 
 export const GAME_BALANCE = {
     saveVersion: 1,
@@ -53,4 +53,25 @@ export const SERVICES = [
 export const RUNTIME_LIMITS = {
     maxDeltaMs: 5000,
 } as const;
+
+export const PURCHASE_EVENTS = {
+    slow: {
+        id: "traffic-surge",
+        name: "Паника в сети",
+        multipliers: {
+            clickMultiplier: 1,
+            passiveMultiplier: 2,
+        },
+        durationMs: 20_000,
+    },
+    ban: {
+        id: "raid-mode",
+        name: "Режим ручной блокировки",
+        multipliers: {
+            clickMultiplier: 2,
+            passiveMultiplier: 1,
+        },
+        durationMs: 20_000,
+    },
+} as const satisfies Record<"slow" | "ban", EventTemplate>;
 

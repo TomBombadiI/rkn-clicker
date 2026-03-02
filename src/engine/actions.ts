@@ -1,14 +1,26 @@
-import { getClickIncome, getPassiveIncomePerSec } from "./calculations";
+import { getClickIncome, getPassiveIncomePerSec, isEventActive } from "./calculations";
 import { GAME_BALANCE, RUNTIME_LIMITS } from "./config";
 import type { BuyActionResult, GameState, ServiceId } from "./types";
 
-export function applyClick(state: GameState): GameState {
+function clearExpiredEvent(state: GameState, now: number): GameState {
+    if (!state.activeEvent || isEventActive(state.activeEvent, now)) {
+        return state;
+    }
+
+    return {
+        ...state,
+        activeEvent: null,
+    };
+}
+
+export function applyClick(state: GameState, now = Date.now()): GameState {
     if (state.isFinished) {
         return state;
     }
 
-    const score = state.score + getClickIncome(state);
-    return {...state, score};
+    const syncedState = clearExpiredEvent(state, now);
+    const score = syncedState.score + getClickIncome(syncedState);
+    return {...syncedState, score};
 }
 
 export function applyTick(state: GameState, now = Date.now()): GameState {
@@ -17,10 +29,41 @@ export function applyTick(state: GameState, now = Date.now()): GameState {
     }
 
     const deltaMs = Math.max(0, Math.min(now - state.lastTickAt, RUNTIME_LIMITS.maxDeltaMs));
-    const score = state.score + getPassiveIncomePerSec(state) * (deltaMs / 1000);
-    const lastTickAt = now;
+    const tickStartedAt = state.lastTickAt;
+    const tickEndedAt = tickStartedAt + deltaMs;
 
-    return {...state, score, lastTickAt};
+    if (!state.activeEvent) {
+        const score = state.score + getPassiveIncomePerSec(state) * (deltaMs / 1000);
+        return {...state, score, lastTickAt: now};
+    }
+
+    const eventEndsAt = state.activeEvent.startedAt + state.activeEvent.durationMs;
+
+    if (eventEndsAt <= tickStartedAt) {
+        const clearedState = {...state, activeEvent: null};
+        const score = clearedState.score + getPassiveIncomePerSec(clearedState) * (deltaMs / 1000);
+        return {...clearedState, score, lastTickAt: now};
+    }
+
+    if (eventEndsAt >= tickEndedAt) {
+        const score = state.score + getPassiveIncomePerSec(state) * (deltaMs / 1000);
+        const nextState = {...state, score, lastTickAt: now};
+
+        if (!isEventActive(state.activeEvent, now)) {
+            return {...nextState, activeEvent: null};
+        }
+
+        return nextState;
+    }
+
+    const boostedDeltaMs = eventEndsAt - tickStartedAt;
+    const baseDeltaMs = deltaMs - boostedDeltaMs;
+    const boostedScore = getPassiveIncomePerSec(state) * (boostedDeltaMs / 1000);
+    const baseState = {...state, activeEvent: null};
+    const baseScore = getPassiveIncomePerSec(baseState) * (baseDeltaMs / 1000);
+    const score = state.score + boostedScore + baseScore;
+
+    return {...baseState, score, lastTickAt: now};
 }
 
 export function buySlow(state: GameState, serviceId: ServiceId): BuyActionResult {

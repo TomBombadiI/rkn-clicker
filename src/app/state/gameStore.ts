@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { applyClick, applyTick, buyBan, buyMax, buySlow } from "../../engine/actions";
 import { getPassiveIncomePerSec } from "../../engine/calculations";
-import { GAME_BALANCE } from "../../engine/config";
+import { GAME_BALANCE, PURCHASE_EVENTS } from "../../engine/config";
 import { createInitialState } from "../../engine/state";
 import { clearSavedGame, loadGame, saveGame } from "../../infra/storage";
-import type { GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
+import type { ActiveEvent, GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
 
 type PurchaseButtonView = {
   label: string;
@@ -30,6 +30,11 @@ export type MaxGoalView = {
   disabled: boolean;
   isFinished: boolean;
 };
+
+export type EventBannerView = {
+  name: string;
+  remainingMs: number;
+} | null;
 
 type GameStore = {
   game: GameState;
@@ -69,8 +74,16 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
+      const nextEvent: ActiveEvent = {
+        ...PURCHASE_EVENTS.slow,
+        startedAt: now,
+      };
+
       return {
-        game: result.nextState,
+        game: {
+          ...result.nextState,
+          activeEvent: nextEvent,
+        },
       };
     });
 
@@ -88,8 +101,16 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
+      const nextEvent: ActiveEvent = {
+        ...PURCHASE_EVENTS.ban,
+        startedAt: now,
+      };
+
       return {
-        game: result.nextState,
+        game: {
+          ...result.nextState,
+          activeEvent: nextEvent,
+        },
       };
     });
 
@@ -210,5 +231,21 @@ export function getMaxGoal(game: GameState): MaxGoalView {
     unlocked: game.maxUnlocked,
     disabled: !game.maxUnlocked || game.isFinished || game.score < GAME_BALANCE.maxBanCost,
     isFinished: game.isFinished,
+  };
+}
+
+export function getEventBanner(game: GameState): EventBannerView {
+  if (!game.activeEvent) {
+    return null;
+  }
+
+  const remainingMs = Math.max(0, game.activeEvent.startedAt + game.activeEvent.durationMs - game.lastTickAt);
+  if (remainingMs <= 0) {
+    return null;
+  }
+
+  return {
+    name: game.activeEvent.name,
+    remainingMs,
   };
 }

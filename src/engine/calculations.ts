@@ -7,6 +7,14 @@ export function getEventMultipliers(activeEvent: ActiveEvent|null): EventMultipl
     };
 }
 
+export function isEventActive(activeEvent: ActiveEvent | null, now: number): boolean {
+    if (!activeEvent) {
+        return false;
+    }
+
+    return now < activeEvent.startedAt + activeEvent.durationMs;
+}
+
 export function getPassiveIncomePerSec(state: GameState): number {
     return state.basePassiveIncome * 
         state.blockMultiplier * 

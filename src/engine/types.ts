@@ -28,6 +28,13 @@ export type ActiveEvent = {
   durationMs: number,
 }
 
+export type EventTemplate = {
+  id: EventId,
+  name: string,
+  multipliers: EventMultipliers,
+  durationMs: number,
+}
+
 export type GameState = {
   score: number,
   clickPower: number,
@@ -50,6 +57,7 @@ export type SaveData = {
   clickPower: number,
   basePassiveIncome: number,
   blockMultiplier: number,
+  activeEvent: ActiveEvent | null,
   serviceProgresses: Record<ServiceId, ServiceState>,
   bannedCount: number,
   dissentPercent: number,

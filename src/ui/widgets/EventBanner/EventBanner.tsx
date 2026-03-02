@@ -1,5 +1,31 @@
+import { getEventBanner, selectGame, useGameStore } from "@/app/state";
+import { Text } from "@/ui/shared/Text";
 import styles from "./EventBanner.module.scss";
 
 export function EventBanner() {
-  return <section className={styles.root}>EventBanner</section>;
+  const game = useGameStore(selectGame);
+  const eventBanner = getEventBanner(game);
+
+  if (!eventBanner) {
+    return (
+      <section className={styles.root}>
+        <Text variant="body-sm" tone="secondary">
+          Сейчас нет активного события.
+        </Text>
+      </section>
+    );
+  }
+
+  const remainingSeconds = Math.ceil(eventBanner.remainingMs / 1000);
+
+  return (
+    <section className={styles.root} aria-label="Активное событие">
+      <Text as="h2" variant="label" weight={700}>
+        {eventBanner.name}
+      </Text>
+      <Text variant="body-sm">
+        Осталось: {remainingSeconds} сек.
+      </Text>
+    </section>
+  );
 }
