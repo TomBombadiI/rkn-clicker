@@ -83,4 +83,32 @@ describe("gameStore", () => {
     expect(useGameStore.getState().game.isFinished).toBe(true);
     expect(useGameStore.getState().game.score).toBe(0);
   });
+
+  it("reaches MAX from a fresh state through bans and the final purchase (smoke)", () => {
+    const totalBanCost = 20 + 100 + 200 + 500;
+
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: totalBanCost + GAME_BALANCE.maxBanCost,
+      },
+    }));
+
+    useGameStore.getState().buyBan("telegram", 100);
+    useGameStore.getState().buyBan("whatsapp", 200);
+    useGameStore.getState().buyBan("instagram", 300);
+    useGameStore.getState().buyBan("youtube", 400);
+
+    const gameAfterAllBans = useGameStore.getState().game;
+    expect(gameAfterAllBans.bannedCount).toBe(4);
+    expect(gameAfterAllBans.dissentPercent).toBe(100);
+    expect(gameAfterAllBans.maxUnlocked).toBe(true);
+    expect(gameAfterAllBans.isFinished).toBe(false);
+
+    useGameStore.getState().buyMax(500);
+
+    const finishedGame = useGameStore.getState().game;
+    expect(finishedGame.isFinished).toBe(true);
+    expect(finishedGame.score).toBe(0);
+  });
 });
