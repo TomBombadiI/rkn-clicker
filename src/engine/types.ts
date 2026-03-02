@@ -63,5 +63,11 @@ export type BuyActionResult = {
   nextState: GameState,
 } | {
   ok: false,
-  reason: 'not_enough_score' | 'already_banned' | 'already_slowed' | 'service_not_found',
+  reason:
+    | 'not_enough_score'
+    | 'already_banned'
+    | 'already_slowed'
+    | 'service_not_found'
+    | 'max_locked'
+    | 'already_finished',
 }

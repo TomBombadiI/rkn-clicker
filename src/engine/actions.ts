@@ -1,13 +1,21 @@
 import { getClickIncome, getPassiveIncomePerSec } from "./calculations";
-import { RUNTIME_LIMITS } from "./config";
+import { GAME_BALANCE, RUNTIME_LIMITS } from "./config";
 import type { BuyActionResult, GameState, ServiceId } from "./types";
 
 export function applyClick(state: GameState): GameState {
+    if (state.isFinished) {
+        return state;
+    }
+
     const score = state.score + getClickIncome(state);
     return {...state, score};
 }
 
 export function applyTick(state: GameState, now = Date.now()): GameState {
+    if (state.isFinished) {
+        return {...state, lastTickAt: now};
+    }
+
     const deltaMs = Math.max(0, Math.min(now - state.lastTickAt, RUNTIME_LIMITS.maxDeltaMs));
     const score = state.score + getPassiveIncomePerSec(state) * (deltaMs / 1000);
     const lastTickAt = now;
@@ -16,6 +24,13 @@ export function applyTick(state: GameState, now = Date.now()): GameState {
 }
 
 export function buySlow(state: GameState, serviceId: ServiceId): BuyActionResult {
+    if (state.isFinished) {
+        return {
+            ok: false,
+            reason: 'already_finished',
+        };
+    }
+
     const serviceProgress = state.serviceProgresses[serviceId];
     const serviceConfig = state.serviceConfigs.find((config) => config.id === serviceId);
 
@@ -61,6 +76,13 @@ export function buySlow(state: GameState, serviceId: ServiceId): BuyActionResult
 }
 
 export function buyBan(state: GameState, serviceId: ServiceId): BuyActionResult {
+    if (state.isFinished) {
+        return {
+            ok: false,
+            reason: 'already_finished',
+        };
+    }
+
     const serviceProgress = state.serviceProgresses[serviceId];
     const serviceConfig = state.serviceConfigs.find((config) => config.id === serviceId);
 
@@ -103,6 +125,36 @@ export function buyBan(state: GameState, serviceId: ServiceId): BuyActionResult 
     return {
         ok: true,
         nextState: {...state, score, serviceProgresses, blockMultiplier, bannedCount, dissentPercent, maxUnlocked},
+    };
+}
+
+export function buyMax(state: GameState): BuyActionResult {
+    if (state.isFinished) {
+        return {
+            ok: false,
+            reason: 'already_finished',
+        };
+    }
+
+    if (!state.maxUnlocked) {
+        return {
+            ok: false,
+            reason: 'max_locked',
+        };
+    }
+
+    if (state.score < GAME_BALANCE.maxBanCost) {
+        return {
+            ok: false,
+            reason: 'not_enough_score',
+        };
+    }
+
+    const score = state.score - GAME_BALANCE.maxBanCost;
+
+    return {
+        ok: true,
+        nextState: {...state, score, isFinished: true},
     };
 }
 

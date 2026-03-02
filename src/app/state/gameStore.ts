@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { applyClick, applyTick, buyBan, buySlow } from "../../engine/actions";
+import { applyClick, applyTick, buyBan, buyMax, buySlow } from "../../engine/actions";
 import { getPassiveIncomePerSec } from "../../engine/calculations";
+import { GAME_BALANCE } from "../../engine/config";
 import { createInitialState } from "../../engine/state";
 import { clearSavedGame, loadGame, saveGame } from "../../infra/storage";
 import type { GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
@@ -23,12 +24,20 @@ export type ServiceCardView = {
   banButton: PurchaseButtonView;
 };
 
+export type MaxGoalView = {
+  cost: number;
+  unlocked: boolean;
+  disabled: boolean;
+  isFinished: boolean;
+};
+
 type GameStore = {
   game: GameState;
   click: () => void;
   tick: (now?: number) => void;
   buySlow: (serviceId: ServiceId, now?: number) => void;
   buyBan: (serviceId: ServiceId, now?: number) => void;
+  buyMax: (now?: number) => void;
   hydrate: (now?: number) => void;
   save: (now?: number) => void;
   reset: (now?: number) => void;
@@ -72,6 +81,25 @@ export const useGameStore = create<GameStore>((set) => ({
     set((state) => {
       const settledGame = applyTick(state.game, now);
       const result = buyBan(settledGame, serviceId);
+
+      if (!result.ok) {
+        return {
+          game: settledGame,
+        };
+      }
+
+      return {
+        game: result.nextState,
+      };
+    });
+
+    saveGame(useGameStore.getState().game, now);
+  },
+
+  buyMax: (now = Date.now()) => {
+    set((state) => {
+      const settledGame = applyTick(state.game, now);
+      const result = buyMax(settledGame);
 
       if (!result.ok) {
         return {
@@ -174,4 +202,13 @@ export function getServiceCards(game: GameState): ServiceCardView[] {
       banButton,
     };
   });
+}
+
+export function getMaxGoal(game: GameState): MaxGoalView {
+  return {
+    cost: GAME_BALANCE.maxBanCost,
+    unlocked: game.maxUnlocked,
+    disabled: !game.maxUnlocked || game.isFinished || game.score < GAME_BALANCE.maxBanCost,
+    isFinished: game.isFinished,
+  };
 }

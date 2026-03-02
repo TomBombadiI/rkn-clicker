@@ -66,4 +66,21 @@ describe("gameStore", () => {
 
     expect(useGameStore.getState().game.score).toBe(4);
   });
+
+  it("finishes the game after buying MAX when it is unlocked (smoke)", () => {
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 100,
+        maxUnlocked: true,
+        dissentPercent: 100,
+        lastTickAt: 0,
+      },
+    }));
+
+    useGameStore.getState().buyMax(100);
+
+    expect(useGameStore.getState().game.isFinished).toBe(true);
+    expect(useGameStore.getState().game.score).toBe(0);
+  });
 });

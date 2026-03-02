@@ -1,15 +1,18 @@
 import { GAME_BALANCE } from '@/engine/config';
 import { useEffect } from 'react';
-import { useGameStore } from '@/app/state';
+import { selectGame, useGameStore } from '@/app/state';
 import { Text } from '@/ui/shared/Text';
 import { ServicesTrigger } from '../../features/ServicesTrigger';
 import { BottomBar } from '../../widgets/BottomBar';
+import { EndScreen } from '../../widgets/EndScreen';
 import { EventBanner } from '../../widgets/EventBanner';
 import { MainActionButton } from '../../widgets/MainActionButton';
 import { TopBar } from '../../widgets/TopBar';
 import s from './GamePage.module.scss';
 
 export function GamePage() {
+  const game = useGameStore(selectGame);
+
   useEffect(() => {
     useGameStore.getState().hydrate();
 
@@ -35,6 +38,14 @@ export function GamePage() {
       window.removeEventListener("pagehide", handlePageHide);
     };
   }, []);
+
+  if (game.isFinished) {
+    return (
+      <div className={s.gamePage}>
+        <EndScreen />
+      </div>
+    );
+  }
 
   return (
     <div className={s.gamePage}>

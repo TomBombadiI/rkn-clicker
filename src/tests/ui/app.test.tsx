@@ -88,4 +88,32 @@ describe('App smoke', () => {
     expect(screen.getByRole('button', { name: /заблокировать telegram/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
   });
+
+  it('shows end screen after buying MAX', () => {
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 100,
+        blockMultiplier: 16,
+        bannedCount: 4,
+        serviceProgresses: {
+          telegram: "banned",
+          whatsapp: "banned",
+          instagram: "banned",
+          youtube: "banned",
+        },
+        maxUnlocked: true,
+        dissentPercent: 100,
+      },
+    }));
+    useGameStore.getState().save();
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /заблокировать max/i }));
+
+    expect(screen.getByRole('heading', { name: /max заблокирован/i })).toBeInTheDocument();
+    expect(screen.getByText(/игра завершена/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^блокировать$/i })).not.toBeInTheDocument();
+  });
 });

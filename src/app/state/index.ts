@@ -1,4 +1,5 @@
 export {
+  getMaxGoal,
   getServiceCards,
   selectBlockMultiplier,
   selectDissentPercent,
@@ -7,4 +8,4 @@ export {
   selectScore,
   useGameStore,
 } from "./gameStore";
-export type { ServiceCardView } from "./gameStore";
+export type { MaxGoalView, ServiceCardView } from "./gameStore";
