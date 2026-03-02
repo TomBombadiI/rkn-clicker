@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { applyClick, applyTick, buyBan, buySlow } from "../../engine/actions";
 import { getPassiveIncomePerSec } from "../../engine/calculations";
 import { createInitialState } from "../../engine/state";
+import { loadGame, saveGame } from "../../infra/storage";
 import type { GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
 
 type PurchaseButtonView = {
@@ -28,6 +29,8 @@ type GameStore = {
   tick: (now?: number) => void;
   buySlow: (serviceId: ServiceId, now?: number) => void;
   buyBan: (serviceId: ServiceId, now?: number) => void;
+  hydrate: (now?: number) => void;
+  save: (now?: number) => void;
   reset: (now?: number) => void;
 };
 
@@ -61,6 +64,8 @@ export const useGameStore = create<GameStore>((set) => ({
         game: result.nextState,
       };
     });
+
+    saveGame(useGameStore.getState().game, now);
   },
 
   buyBan: (serviceId, now = Date.now()) => {
@@ -78,6 +83,24 @@ export const useGameStore = create<GameStore>((set) => ({
         game: result.nextState,
       };
     });
+
+    saveGame(useGameStore.getState().game, now);
+  },
+
+  hydrate: (now = Date.now()) => {
+    const loadedGame = loadGame(now);
+
+    if (!loadedGame) {
+      return;
+    }
+
+    set({
+      game: loadedGame,
+    });
+  },
+
+  save: (now = Date.now()) => {
+    saveGame(useGameStore.getState().game, now);
   },
 
   reset: (now) => {

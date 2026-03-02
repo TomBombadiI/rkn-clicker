@@ -2,6 +2,7 @@ import type { ServiceConfig } from "./types";
 
 export const GAME_BALANCE = {
     saveVersion: 1,
+    saveStorageKey: "rkn-clicker-save",
     initialScore: 0,
     initialClickPower: 1,
     initialBasePassiveIncome: 0,
