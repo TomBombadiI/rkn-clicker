@@ -1,0 +1,58 @@
+.root {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+  text-align: left;
+  font-weight: 400;
+  color: #111827;
+}
+
+.body-sm {
+  font-size: 0.875rem;
+}
+
+.caption {
+  font-size: 0.75rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+}
+
+.secondary {
+  color: #374151;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+.danger {
+  color: #dc2626;
+}
+
+.success {
+  color: #16a34a;
+}
+
+.weight-500 {
+  font-weight: 500;
+}
+
+.weight-600 {
+  font-weight: 600;
+}
+
+.weight-700 {
+  font-weight: 700;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.align-right {
+  text-align: right;
+}

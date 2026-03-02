@@ -1,0 +1,25 @@
+@use "@/styles/helpers" as *;
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+  transition: all var(--transition-duration);
+
+  @include hover {
+    background-color: #ccc;
+  }
+
+  &:active {
+    scale: 0.95;
+  }
+}
+
+.circle {
+  --circleSize: 44px;
+
+  width: var(--circleSize);
+  height: var(--circleSize);
+  border-radius: 50%;
+}

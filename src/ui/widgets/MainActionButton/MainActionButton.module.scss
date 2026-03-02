@@ -1,0 +1,11 @@
+.root {
+  display: flex;
+  justify-content: center;
+}
+
+.button {
+  min-width: 220px;
+  min-height: 64px;
+  padding: 16px 24px;
+  border-radius: 20px;
+}
