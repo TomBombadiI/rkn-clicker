@@ -28,6 +28,8 @@ export type ActiveEvent = {
   durationMs: number,
 }
 
+export type ScheduledEvent = ActiveEvent
+
 export type EventTemplate = {
   id: EventId,
   name: string,
@@ -43,6 +45,7 @@ export type GameState = {
   serviceConfigs: ServiceConfig[],
   serviceProgresses: Record<ServiceId, ServiceState>,
   activeEvent: ActiveEvent | null,
+  scheduledEvent: ScheduledEvent | null,
   bannedCount: number,
   dissentPercent: number,
   maxUnlocked: boolean,
@@ -58,6 +61,7 @@ export type SaveData = {
   basePassiveIncome: number,
   blockMultiplier: number,
   activeEvent: ActiveEvent | null,
+  scheduledEvent: ScheduledEvent | null,
   serviceProgresses: Record<ServiceId, ServiceState>,
   bannedCount: number,
   dissentPercent: number,

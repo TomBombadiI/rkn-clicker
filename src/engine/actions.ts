@@ -2,6 +2,18 @@ import { getClickIncome, getPassiveIncomePerSec, isEventActive } from "./calcula
 import { GAME_BALANCE, RUNTIME_LIMITS } from "./config";
 import type { BuyActionResult, GameState, ServiceId } from "./types";
 
+function activateScheduledEvent(state: GameState): GameState {
+    if (!state.scheduledEvent) {
+        return state;
+    }
+
+    return {
+        ...state,
+        activeEvent: state.scheduledEvent,
+        scheduledEvent: null,
+    };
+}
+
 function clearExpiredEvent(state: GameState, now: number): GameState {
     if (!state.activeEvent || isEventActive(state.activeEvent, now)) {
         return state;
@@ -13,12 +25,23 @@ function clearExpiredEvent(state: GameState, now: number): GameState {
     };
 }
 
+function synchronizeInstantEvents(state: GameState, now: number): GameState {
+    let nextState = clearExpiredEvent(state, now);
+
+    if (!nextState.activeEvent && nextState.scheduledEvent && nextState.scheduledEvent.startedAt <= now) {
+        nextState = activateScheduledEvent(nextState);
+        nextState = clearExpiredEvent(nextState, now);
+    }
+
+    return nextState;
+}
+
 export function applyClick(state: GameState, now = Date.now()): GameState {
     if (state.isFinished) {
         return state;
     }
 
-    const syncedState = clearExpiredEvent(state, now);
+    const syncedState = synchronizeInstantEvents(state, now);
     const score = syncedState.score + getClickIncome(syncedState);
     return {...syncedState, score};
 }
@@ -28,42 +51,61 @@ export function applyTick(state: GameState, now = Date.now()): GameState {
         return {...state, lastTickAt: now};
     }
 
+    let simulationState = clearExpiredEvent(state, state.lastTickAt);
+    if (!simulationState.activeEvent && simulationState.scheduledEvent && simulationState.scheduledEvent.startedAt <= simulationState.lastTickAt) {
+        simulationState = activateScheduledEvent(simulationState);
+    }
+
     const deltaMs = Math.max(0, Math.min(now - state.lastTickAt, RUNTIME_LIMITS.maxDeltaMs));
-    const tickStartedAt = state.lastTickAt;
+    const tickStartedAt = simulationState.lastTickAt;
     const tickEndedAt = tickStartedAt + deltaMs;
 
-    if (!state.activeEvent) {
-        const score = state.score + getPassiveIncomePerSec(state) * (deltaMs / 1000);
-        return {...state, score, lastTickAt: now};
-    }
+    let cursor = tickStartedAt;
+    let score = simulationState.score;
+    let runtimeState = simulationState;
 
-    const eventEndsAt = state.activeEvent.startedAt + state.activeEvent.durationMs;
+    while (cursor < tickEndedAt) {
+        let nextBoundary = tickEndedAt;
 
-    if (eventEndsAt <= tickStartedAt) {
-        const clearedState = {...state, activeEvent: null};
-        const score = clearedState.score + getPassiveIncomePerSec(clearedState) * (deltaMs / 1000);
-        return {...clearedState, score, lastTickAt: now};
-    }
-
-    if (eventEndsAt >= tickEndedAt) {
-        const score = state.score + getPassiveIncomePerSec(state) * (deltaMs / 1000);
-        const nextState = {...state, score, lastTickAt: now};
-
-        if (!isEventActive(state.activeEvent, now)) {
-            return {...nextState, activeEvent: null};
+        if (runtimeState.activeEvent) {
+            nextBoundary = Math.min(
+                nextBoundary,
+                runtimeState.activeEvent.startedAt + runtimeState.activeEvent.durationMs,
+            );
+        } else if (runtimeState.scheduledEvent) {
+            nextBoundary = Math.min(
+                nextBoundary,
+                runtimeState.scheduledEvent.startedAt,
+            );
         }
 
-        return nextState;
+        const segmentMs = Math.max(0, nextBoundary - cursor);
+        score += getPassiveIncomePerSec(runtimeState) * (segmentMs / 1000);
+        cursor = nextBoundary;
+
+        if (runtimeState.activeEvent && cursor >= runtimeState.activeEvent.startedAt + runtimeState.activeEvent.durationMs) {
+            runtimeState = {
+                ...runtimeState,
+                activeEvent: null,
+            };
+            continue;
+        }
+
+        if (!runtimeState.activeEvent && runtimeState.scheduledEvent && cursor >= runtimeState.scheduledEvent.startedAt) {
+            runtimeState = activateScheduledEvent(runtimeState);
+        }
     }
 
-    const boostedDeltaMs = eventEndsAt - tickStartedAt;
-    const baseDeltaMs = deltaMs - boostedDeltaMs;
-    const boostedScore = getPassiveIncomePerSec(state) * (boostedDeltaMs / 1000);
-    const baseState = {...state, activeEvent: null};
-    const baseScore = getPassiveIncomePerSec(baseState) * (baseDeltaMs / 1000);
-    const score = state.score + boostedScore + baseScore;
+    const nextState = synchronizeInstantEvents(
+        {
+            ...runtimeState,
+            score,
+            lastTickAt: now,
+        },
+        now,
+    );
 
-    return {...baseState, score, lastTickAt: now};
+    return nextState;
 }
 
 export function buySlow(state: GameState, serviceId: ServiceId): BuyActionResult {

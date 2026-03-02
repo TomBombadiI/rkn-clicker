@@ -34,6 +34,7 @@ export type MaxGoalView = {
 export type EventBannerView = {
   name: string;
   remainingMs: number;
+  phase: "scheduled" | "active";
 } | null;
 
 type GameStore = {
@@ -76,13 +77,13 @@ export const useGameStore = create<GameStore>((set) => ({
 
       const nextEvent: ActiveEvent = {
         ...PURCHASE_EVENTS.slow,
-        startedAt: now,
+        startedAt: now + GAME_BALANCE.eventWindowMinMs,
       };
 
       return {
         game: {
           ...result.nextState,
-          activeEvent: nextEvent,
+          scheduledEvent: nextEvent,
         },
       };
     });
@@ -103,13 +104,13 @@ export const useGameStore = create<GameStore>((set) => ({
 
       const nextEvent: ActiveEvent = {
         ...PURCHASE_EVENTS.ban,
-        startedAt: now,
+        startedAt: now + GAME_BALANCE.eventWindowMinMs,
       };
 
       return {
         game: {
           ...result.nextState,
-          activeEvent: nextEvent,
+          scheduledEvent: nextEvent,
         },
       };
     });
@@ -235,17 +236,29 @@ export function getMaxGoal(game: GameState): MaxGoalView {
 }
 
 export function getEventBanner(game: GameState): EventBannerView {
-  if (!game.activeEvent) {
+  if (game.activeEvent) {
+    const remainingMs = Math.max(0, game.activeEvent.startedAt + game.activeEvent.durationMs - game.lastTickAt);
+    if (remainingMs > 0) {
+      return {
+        name: game.activeEvent.name,
+        remainingMs,
+        phase: "active",
+      };
+    }
+  }
+
+  if (!game.scheduledEvent) {
     return null;
   }
 
-  const remainingMs = Math.max(0, game.activeEvent.startedAt + game.activeEvent.durationMs - game.lastTickAt);
+  const remainingMs = Math.max(0, game.scheduledEvent.startedAt - game.lastTickAt);
   if (remainingMs <= 0) {
     return null;
   }
 
   return {
-    name: game.activeEvent.name,
+    name: game.scheduledEvent.name,
     remainingMs,
+    phase: "scheduled",
   };
 }

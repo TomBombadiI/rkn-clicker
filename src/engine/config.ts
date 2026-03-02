@@ -4,6 +4,8 @@ export const GAME_BALANCE = {
     saveVersion: 1,
     saveStorageKey: "rkn-clicker-save",
     maxBanCost: 100,
+    eventWindowMinMs: 20_000,
+    eventWindowMaxMs: 60_000,
     initialScore: 0,
     initialClickPower: 1,
     initialBasePassiveIncome: 0,

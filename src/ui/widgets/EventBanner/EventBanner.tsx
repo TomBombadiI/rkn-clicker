@@ -24,7 +24,9 @@ export function EventBanner() {
         {eventBanner.name}
       </Text>
       <Text variant="body-sm">
-        Осталось: {remainingSeconds} сек.
+        {eventBanner.phase === "active"
+          ? `Осталось: ${remainingSeconds} сек.`
+          : `Запуск через: ${remainingSeconds} сек.`}
       </Text>
     </section>
   );

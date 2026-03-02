@@ -26,7 +26,7 @@ describe("gameStore", () => {
 
     useGameStore.getState().tick(250);
 
-    expect(useGameStore.getState().game.score).toBe(3);
+    expect(useGameStore.getState().game.score).toBe(1.5);
   });
 
   it("saves progress after a successful purchase (smoke)", () => {
@@ -42,7 +42,8 @@ describe("gameStore", () => {
     const saved = JSON.parse(savedRaw ?? "{}");
     expect(saved.score).toBe(0);
     expect(saved.basePassiveIncome).toBe(10);
-    expect(saved.activeEvent.name).toBe("Паника в сети");
+    expect(saved.activeEvent).toBeNull();
+    expect(saved.scheduledEvent.name).toBe("Паника в сети");
     expect(saved.serviceProgresses.telegram).toBe("slowed");
   });
 
@@ -113,7 +114,7 @@ describe("gameStore", () => {
     expect(finishedGame.score).toBe(0);
   });
 
-  it("starts and expires a purchase event that boosts passive income (regression guard)", () => {
+  it("schedules a purchase event and activates it when its start time comes (regression guard)", () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
@@ -123,10 +124,15 @@ describe("gameStore", () => {
 
     useGameStore.getState().buySlow("telegram", 100);
 
-    expect(useGameStore.getState().game.activeEvent?.name).toBe("Паника в сети");
-    expect(useGameStore.getState().game.activeEvent?.multipliers.passiveMultiplier).toBe(2);
+    expect(useGameStore.getState().game.activeEvent).toBeNull();
+    expect(useGameStore.getState().game.scheduledEvent?.name).toBe("Паника в сети");
 
     useGameStore.getState().tick(20_100);
+
+    expect(useGameStore.getState().game.activeEvent?.name).toBe("Паника в сети");
+    expect(useGameStore.getState().game.scheduledEvent).toBeNull();
+
+    useGameStore.getState().tick(40_100);
 
     expect(useGameStore.getState().game.activeEvent).toBeNull();
   });

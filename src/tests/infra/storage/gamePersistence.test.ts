@@ -23,6 +23,7 @@ describe("gamePersistence", () => {
     expect(restoredGame.score).toBe(42);
     expect(restoredGame.basePassiveIncome).toBe(10);
     expect(restoredGame.serviceProgresses.telegram).toBe("slowed");
+    expect(restoredGame.scheduledEvent).toBeNull();
     expect(restoredGame.lastTickAt).toBe(300);
   });
 
@@ -41,6 +42,8 @@ describe("gamePersistence", () => {
         clickPower: 1,
         basePassiveIncome: 0,
         blockMultiplier: 1,
+        activeEvent: null,
+        scheduledEvent: null,
         serviceProgresses: {},
         bannedCount: 0,
         dissentPercent: 0,

@@ -16,6 +16,7 @@ export function createInitialState(now = Date.now()): GameState {
         serviceConfigs: [...SERVICES],
         serviceProgresses: createInitialServiceProgresses(),
         activeEvent: null,
+        scheduledEvent: null,
         bannedCount: 0,
         dissentPercent: 0,
         maxUnlocked: false,
