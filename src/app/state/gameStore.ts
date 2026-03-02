@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { applyClick, applyTick, buyBan, buySlow } from "../../engine/actions";
 import { getPassiveIncomePerSec } from "../../engine/calculations";
 import { createInitialState } from "../../engine/state";
-import { loadGame, saveGame } from "../../infra/storage";
+import { clearSavedGame, loadGame, saveGame } from "../../infra/storage";
 import type { GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
 
 type PurchaseButtonView = {
@@ -103,10 +103,15 @@ export const useGameStore = create<GameStore>((set) => ({
     saveGame(useGameStore.getState().game, now);
   },
 
-  reset: (now) => {
+  reset: (now = Date.now()) => {
+    const nextGame = createInitialState(now);
+
     set({
-      game: createInitialState(now),
+      game: nextGame,
     });
+
+    clearSavedGame();
+    saveGame(nextGame, now);
   },
 }));
 

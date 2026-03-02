@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useGameStore } from '@/app/state';
 import { Text } from '@/ui/shared/Text';
 import { ServicesTrigger } from '../../features/ServicesTrigger';
+import { BottomBar } from '../../widgets/BottomBar';
 import { EventBanner } from '../../widgets/EventBanner';
 import { MainActionButton } from '../../widgets/MainActionButton';
 import { TopBar } from '../../widgets/TopBar';
@@ -44,6 +45,7 @@ export function GamePage() {
       <EventBanner />
       <MainActionButton />
       <ServicesTrigger />
+      <BottomBar />
     </div>
   );
 }
