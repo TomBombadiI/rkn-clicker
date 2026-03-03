@@ -66,10 +66,12 @@ describe('App smoke', () => {
     const savedBeforeReset = window.localStorage.getItem(GAME_BALANCE.saveStorageKey);
     expect(savedBeforeReset).not.toBeNull();
     expect(screen.getByText(/очки блокировки: 3/i)).toBeInTheDocument();
+    expect(screen.getByText(/прогресс сохранен/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /сбросить прогресс/i }));
 
     expect(screen.getByText(/очки блокировки: 0/i)).toBeInTheDocument();
+    expect(screen.getByText(/прогресс сброшен/i)).toBeInTheDocument();
 
     const savedAfterReset = window.localStorage.getItem(GAME_BALANCE.saveStorageKey);
     expect(savedAfterReset).not.toBeNull();
@@ -118,5 +120,18 @@ describe('App smoke', () => {
     expect(screen.getByRole('heading', { name: /max заблокирован/i })).toBeInTheDocument();
     expect(screen.getByText(/игра завершена/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^блокировать$/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the latest purchase in the bottom action log', () => {
+    render(<App />);
+
+    for (let i = 0; i < 10; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /замедлить telegram/i }));
+
+    expect(screen.getByText(/последние действия/i)).toBeInTheDocument();
+    expect(screen.getByText(/замедление куплено: telegram/i)).toBeInTheDocument();
   });
 });

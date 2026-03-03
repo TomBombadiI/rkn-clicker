@@ -1,4 +1,5 @@
 export {
+  selectActionLog,
   getEventBanner,
   getMaxGoal,
   getServiceCards,
@@ -9,4 +10,4 @@ export {
   selectScore,
   useGameStore,
 } from "./gameStore";
-export type { EventBannerView, MaxGoalView, ServiceCardView } from "./gameStore";
+export type { ActionLogEntry, EventBannerView, MaxGoalView, ServiceCardView } from "./gameStore";

@@ -11,6 +11,11 @@ type PurchaseButtonView = {
   disabled: boolean;
 };
 
+export type ActionLogEntry = {
+  message: string;
+  createdAt: number;
+};
+
 export type ServiceCardView = {
   id: ServiceId;
   name: string;
@@ -39,7 +44,8 @@ export type EventBannerView = {
 
 type GameStore = {
   game: GameState;
-  click: () => void;
+  actionLog: ActionLogEntry[];
+  click: (now?: number) => void;
   tick: (now?: number) => void;
   buySlow: (serviceId: ServiceId, now?: number) => void;
   buyBan: (serviceId: ServiceId, now?: number) => void;
@@ -49,13 +55,44 @@ type GameStore = {
   reset: (now?: number) => void;
 };
 
+const MAX_ACTION_LOG_ENTRIES = 10;
+
+function trimActionLog(entries: ActionLogEntry[]): ActionLogEntry[] {
+  return entries.slice(0, MAX_ACTION_LOG_ENTRIES);
+}
+
+function pushActionLog(
+  entries: ActionLogEntry[],
+  message: string,
+  now: number,
+): ActionLogEntry[] {
+  return trimActionLog([
+    {
+      message,
+      createdAt: now,
+    },
+    ...entries,
+  ]);
+}
+
 export const useGameStore = create<GameStore>((set) => ({
   game: createInitialState(),
+  actionLog: [],
 
-  click: () => {
-    set((state) => ({
-      game: applyClick(state.game),
-    }));
+  click: (now = Date.now()) => {
+    set((state) => {
+      const nextGame = applyClick(state.game, now);
+      const clickGain = Math.max(0, nextGame.score - state.game.score);
+
+      return {
+        game: nextGame,
+        actionLog: pushActionLog(
+          state.actionLog,
+          `Клик: +${Math.round(clickGain)}`,
+          now,
+        ),
+      };
+    });
   },
 
   tick: (now) => {
@@ -85,6 +122,11 @@ export const useGameStore = create<GameStore>((set) => ({
           ...result.nextState,
           scheduledEvent: nextEvent,
         },
+        actionLog: pushActionLog(
+          state.actionLog,
+          `Замедление куплено: ${serviceId}`,
+          now,
+        ),
       };
     });
 
@@ -112,6 +154,11 @@ export const useGameStore = create<GameStore>((set) => ({
           ...result.nextState,
           scheduledEvent: nextEvent,
         },
+        actionLog: pushActionLog(
+          state.actionLog,
+          `Блокировка куплена: ${serviceId}`,
+          now,
+        ),
       };
     });
 
@@ -131,6 +178,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
       return {
         game: result.nextState,
+        actionLog: pushActionLog(state.actionLog, "MAX заблокирован", now),
       };
     });
 
@@ -151,6 +199,9 @@ export const useGameStore = create<GameStore>((set) => ({
 
   save: (now = Date.now()) => {
     saveGame(useGameStore.getState().game, now);
+    set((state) => ({
+      actionLog: pushActionLog(state.actionLog, "Прогресс сохранен", now),
+    }));
   },
 
   reset: (now = Date.now()) => {
@@ -158,6 +209,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
     set({
       game: nextGame,
+      actionLog: pushActionLog([], "Прогресс сброшен", now),
     });
 
     clearSavedGame();
@@ -183,6 +235,10 @@ export function selectBlockMultiplier(gameStore: GameStore): number {
 
 export function selectDissentPercent(gameStore: GameStore): number {
   return gameStore.game.dissentPercent;
+}
+
+export function selectActionLog(gameStore: GameStore): ActionLogEntry[] {
+  return gameStore.actionLog;
 }
 
 export function getServiceCards(game: GameState): ServiceCardView[] {

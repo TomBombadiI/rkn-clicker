@@ -12,3 +12,22 @@
   flex-wrap: wrap;
   gap: 12px;
 }
+
+.log {
+  display: grid;
+  gap: 8px;
+}
+
+.logList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logItem {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgb(17 24 39 / 6%);
+}
