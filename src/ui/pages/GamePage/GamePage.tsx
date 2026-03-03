@@ -1,6 +1,7 @@
 import { GAME_BALANCE } from '@/engine/config';
 import { useEffect } from 'react';
 import { selectGame, useGameStore } from '@/app/state';
+import { readyYandexSdk } from '@/infra/yandex';
 import { Text } from '@/ui/shared/Text';
 import { ServicesTrigger } from '../../features/ServicesTrigger';
 import { BottomBar } from '../../widgets/BottomBar';
@@ -15,6 +16,7 @@ export function GamePage() {
 
   useEffect(() => {
     useGameStore.getState().hydrate();
+    void readyYandexSdk();
 
     const intervalId = window.setInterval(() => {
       useGameStore.getState().tick();
