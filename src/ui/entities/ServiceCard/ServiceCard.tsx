@@ -1,3 +1,4 @@
+import { formatCompactNumber } from "../../shared/format/formatCompactNumber";
 import { Button } from "../../shared/Button";
 import { Text } from "../../shared/Text";
 import styles from "./ServiceCard.module.scss";
@@ -44,9 +45,9 @@ export function ServiceCard({
 
       <div className={styles.actions}>
         <div className={styles.actionBlock}>
-          <Text variant="body-sm">Замедление: +{slowEffect}/сек</Text>
+          <Text variant="body-sm">Замедление: +{formatCompactNumber(slowEffect)}/сек</Text>
           <Text variant="caption" tone="secondary">
-            Цена: {slowCost}
+            Цена: {formatCompactNumber(slowCost)}
           </Text>
           <Button
             type="button"
@@ -59,9 +60,9 @@ export function ServiceCard({
         </div>
 
         <div className={styles.actionBlock}>
-          <Text variant="body-sm">Блокировка: x{banMultiplier}</Text>
+          <Text variant="body-sm">Блокировка: x{formatCompactNumber(banMultiplier)}</Text>
           <Text variant="caption" tone="secondary">
-            Цена: {banCost}
+            Цена: {formatCompactNumber(banCost)}
           </Text>
           <Button
             type="button"

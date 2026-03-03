@@ -1,14 +1,7 @@
 import { selectBlockMultiplier, selectPassiveIncome, selectScore, useGameStore } from "@/app/state";
+import { formatCompactNumber } from "@/ui/shared/format/formatCompactNumber";
 import { Text } from "@/ui/shared/Text";
 import styles from "./ScoreInfo.module.scss";
-
-const NUMBER_FORMATTER = new Intl.NumberFormat("ru-RU", {
-  maximumFractionDigits: 0,
-});
-
-const RATE_FORMATTER = new Intl.NumberFormat("ru-RU", {
-  maximumFractionDigits: 1,
-});
 
 export function ScoreInfo() {
   const score = useGameStore(selectScore);
@@ -18,13 +11,13 @@ export function ScoreInfo() {
   return (
     <section className={styles.root} aria-label="Основные показатели">
       <Text as="p" variant="body-sm" weight={600}>
-        Очки блокировки: {NUMBER_FORMATTER.format(score)}
+        Очки блокировки: {formatCompactNumber(score)}
       </Text>
       <Text as="p" variant="body-sm">
-        Доход в секунду: {RATE_FORMATTER.format(passiveIncome)}
+        Доход в секунду: {formatCompactNumber(passiveIncome)}
       </Text>
       <Text as="p" variant="body-sm">
-        Множитель блокировок: x{RATE_FORMATTER.format(blockMultiplier)}
+        Множитель блокировок: x{formatCompactNumber(blockMultiplier)}
       </Text>
     </section>
   );
