@@ -31,9 +31,7 @@ describe('App smoke', () => {
     fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));
 
     expect(screen.getByRole('heading', { name: /настройки/i })).toBeInTheDocument();
-    expect(
-      screen.getByText(/закладываем рабочий каркас окна/i)
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^вкл$/i })).toHaveAttribute("aria-pressed", "true");
   });
 
   it('buys slow for the first service and enables passive income', () => {
@@ -133,5 +131,16 @@ describe('App smoke', () => {
 
     expect(screen.getByText(/последние действия/i)).toBeInTheDocument();
     expect(screen.getByText(/замедление куплено: telegram/i)).toBeInTheDocument();
+  });
+
+  it('toggles sound in settings and reflects the current state', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^вкл$/i }));
+
+    expect(screen.getByRole('button', { name: /^выкл$/i })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
+    expect(screen.getByText(/звук выключен/i)).toBeInTheDocument();
   });
 });

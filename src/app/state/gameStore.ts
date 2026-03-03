@@ -45,6 +45,7 @@ export type EventBannerView = {
 type GameStore = {
   game: GameState;
   actionLog: ActionLogEntry[];
+  soundEnabled: boolean;
   click: (now?: number) => void;
   tick: (now?: number) => void;
   buySlow: (serviceId: ServiceId, now?: number) => void;
@@ -53,6 +54,7 @@ type GameStore = {
   hydrate: (now?: number) => void;
   save: (now?: number) => void;
   reset: (now?: number) => void;
+  toggleSound: () => void;
 };
 
 const MAX_ACTION_LOG_ENTRIES = 10;
@@ -78,6 +80,7 @@ function pushActionLog(
 export const useGameStore = create<GameStore>((set) => ({
   game: createInitialState(),
   actionLog: [],
+  soundEnabled: true,
 
   click: (now = Date.now()) => {
     set((state) => {
@@ -207,13 +210,25 @@ export const useGameStore = create<GameStore>((set) => ({
   reset: (now = Date.now()) => {
     const nextGame = createInitialState(now);
 
-    set({
+    set((state) => ({
       game: nextGame,
+      soundEnabled: state.soundEnabled,
       actionLog: pushActionLog([], "Прогресс сброшен", now),
-    });
+    }));
 
     clearSavedGame();
     saveGame(nextGame, now);
+  },
+
+  toggleSound: () => {
+    set((state) => ({
+      soundEnabled: !state.soundEnabled,
+      actionLog: pushActionLog(
+        state.actionLog,
+        state.soundEnabled ? "Звук выключен" : "Звук включен",
+        Date.now(),
+      ),
+    }));
   },
 }));
 
@@ -239,6 +254,10 @@ export function selectDissentPercent(gameStore: GameStore): number {
 
 export function selectActionLog(gameStore: GameStore): ActionLogEntry[] {
   return gameStore.actionLog;
+}
+
+export function selectSoundEnabled(gameStore: GameStore): boolean {
+  return gameStore.soundEnabled;
 }
 
 export function getServiceCards(game: GameState): ServiceCardView[] {

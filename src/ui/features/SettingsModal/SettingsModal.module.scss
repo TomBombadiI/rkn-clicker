@@ -37,9 +37,26 @@
   background: rgb(255 255 255 / 4%);
 }
 
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settingCopy {
+  display: grid;
+  gap: 6px;
+}
+
 @media (max-width: 640px) {
   .content {
     width: min(94vw, 420px);
     padding: 16px;
+  }
+
+  .settingRow {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
