@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { applyClick, applyTick, buyBan, buyMax, buySlow } from "../../engine/actions";
 import { getPassiveIncomePerSec } from "../../engine/calculations";
-import { GAME_BALANCE, PURCHASE_EVENTS } from "../../engine/config";
+import { GAME_BALANCE, getEventDelayMs, PURCHASE_EVENTS } from "../../engine/config";
 import { createInitialState } from "../../engine/state";
 import { clearSavedGame, loadGame, saveGame } from "../../infra/storage";
 import type { ActiveEvent, GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
@@ -77,7 +77,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
       const nextEvent: ActiveEvent = {
         ...PURCHASE_EVENTS.slow,
-        startedAt: now + GAME_BALANCE.eventWindowMinMs,
+        startedAt: now + getEventDelayMs(),
       };
 
       return {
@@ -104,7 +104,7 @@ export const useGameStore = create<GameStore>((set) => ({
 
       const nextEvent: ActiveEvent = {
         ...PURCHASE_EVENTS.ban,
-        startedAt: now + GAME_BALANCE.eventWindowMinMs,
+        startedAt: now + getEventDelayMs(),
       };
 
       return {

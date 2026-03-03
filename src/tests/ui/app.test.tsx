@@ -6,6 +6,7 @@ import { GAME_BALANCE } from "../../engine/config";
 
 describe('App smoke', () => {
   beforeEach(() => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
     window.localStorage.clear();
     useGameStore.getState().reset(0);
   });

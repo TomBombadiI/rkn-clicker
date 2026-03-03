@@ -77,3 +77,10 @@ export const PURCHASE_EVENTS = {
     },
 } as const satisfies Record<"slow" | "ban", EventTemplate>;
 
+export function getEventDelayMs(randomValue = Math.random()): number {
+    const normalizedRandom = Math.min(Math.max(randomValue, 0), 1);
+    const range = GAME_BALANCE.eventWindowMaxMs - GAME_BALANCE.eventWindowMinMs;
+
+    return GAME_BALANCE.eventWindowMinMs + Math.round(range * normalizedRandom);
+}
+

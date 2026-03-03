@@ -1,11 +1,16 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GAME_BALANCE } from "../../../engine/config";
 import { useGameStore } from "../../../app/state";
 
 describe("gameStore", () => {
   beforeEach(() => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
     window.localStorage.clear();
     useGameStore.getState().reset(0);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("does not apply new passive income retroactively when buying slow mid-tick (regression guard)", () => {
