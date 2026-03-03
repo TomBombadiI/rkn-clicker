@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GAME_BALANCE } from "../../../engine/config";
+import { GAME_BALANCE, SERVICES } from "../../../engine/config";
 import { useGameStore } from "../../../app/state";
 
 describe("gameStore", () => {
@@ -92,7 +92,7 @@ describe("gameStore", () => {
   });
 
   it("reaches MAX from a fresh state through bans and the final purchase (smoke)", () => {
-    const totalBanCost = 20 + 100 + 200 + 500;
+    const totalBanCost = SERVICES.reduce((total, service) => total + service.banCost, 0);
 
     useGameStore.setState((state) => ({
       game: {
@@ -101,13 +101,12 @@ describe("gameStore", () => {
       },
     }));
 
-    useGameStore.getState().buyBan("telegram", 100);
-    useGameStore.getState().buyBan("whatsapp", 200);
-    useGameStore.getState().buyBan("instagram", 300);
-    useGameStore.getState().buyBan("youtube", 400);
+    SERVICES.forEach((service, index) => {
+      useGameStore.getState().buyBan(service.id, 100 + index * 100);
+    });
 
     const gameAfterAllBans = useGameStore.getState().game;
-    expect(gameAfterAllBans.bannedCount).toBe(4);
+    expect(gameAfterAllBans.bannedCount).toBe(SERVICES.length);
     expect(gameAfterAllBans.dissentPercent).toBe(100);
     expect(gameAfterAllBans.maxUnlocked).toBe(true);
     expect(gameAfterAllBans.isFinished).toBe(false);

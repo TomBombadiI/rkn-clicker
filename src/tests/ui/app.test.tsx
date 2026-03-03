@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { useGameStore } from "../../app/state";
-import { GAME_BALANCE } from "../../engine/config";
+import { GAME_BALANCE, SERVICES } from "../../engine/config";
 
 describe('App smoke', () => {
   beforeEach(() => {
@@ -78,33 +78,39 @@ describe('App smoke', () => {
   });
 
   it('buys ban for the first service and updates multiplier and dissent', () => {
-    render(<App />);
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 20,
+      },
+    }));
+    useGameStore.getState().save();
 
-    for (let i = 0; i < 20; i += 1) {
-      fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
-    }
+    render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /заблокировать telegram/i }));
 
     expect(screen.getByText(/множитель блокировок: x2/i)).toBeInTheDocument();
-    expect(screen.getByText(/народное недовольство: 25%/i)).toBeInTheDocument();
+    expect(screen.getByText(/народное недовольство: 5%/i)).toBeInTheDocument();
     expect(screen.getByText(/статус: banned/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /заблокировать telegram/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
   });
 
   it('shows end screen after buying MAX', () => {
+    const bannedProgresses = Object.fromEntries(
+      SERVICES.map((service) => [service.id, "banned"]),
+    );
+
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
         score: 100,
         blockMultiplier: 16,
-        bannedCount: 4,
+        bannedCount: SERVICES.length,
         serviceProgresses: {
-          telegram: "banned",
-          whatsapp: "banned",
-          instagram: "banned",
-          youtube: "banned",
+          ...state.game.serviceProgresses,
+          ...bannedProgresses,
         },
         maxUnlocked: true,
         dissentPercent: 100,

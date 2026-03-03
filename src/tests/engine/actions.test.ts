@@ -128,7 +128,7 @@ describe("buyBan", () => {
       state.blockMultiplier * SERVICES[0].banMultiplier,
     );
     expect(result.nextState.bannedCount).toBe(1);
-    expect(result.nextState.dissentPercent).toBe(25);
+    expect(result.nextState.dissentPercent).toBe(Math.floor(100 / SERVICES.length));
     expect(result.nextState.maxUnlocked).toBe(false);
   });
 
@@ -150,16 +150,19 @@ describe("buyBan", () => {
   });
 
   it("sets maxUnlocked at 100% dissent (regression guard)", () => {
-    const lastServiceId: ServiceId = SERVICES[3].id;
+    const lastService = SERVICES[SERVICES.length - 1];
+    const lastServiceId: ServiceId = lastService.id;
+    const allButLastBanned = Object.fromEntries(
+      SERVICES.slice(0, -1).map((service) => [service.id, "banned"]),
+    );
     const state = makeState({
-      score: SERVICES[3].banCost + 1,
-      bannedCount: 3,
-      dissentPercent: 75,
+      score: lastService.banCost + 1,
+      bannedCount: SERVICES.length - 1,
+      dissentPercent: Math.floor(((SERVICES.length - 1) / SERVICES.length) * 100),
       serviceProgresses: {
-        [SERVICES[0].id]: "banned",
-        [SERVICES[1].id]: "banned",
-        [SERVICES[2].id]: "banned",
-        [SERVICES[3].id]: "none",
+        ...createInitialState().serviceProgresses,
+        ...allButLastBanned,
+        [lastService.id]: "none",
       },
     });
 
@@ -168,7 +171,7 @@ describe("buyBan", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.nextState.bannedCount).toBe(4);
+    expect(result.nextState.bannedCount).toBe(SERVICES.length);
     expect(result.nextState.dissentPercent).toBe(100);
     expect(result.nextState.maxUnlocked).toBe(true);
   });
