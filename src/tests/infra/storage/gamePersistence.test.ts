@@ -27,6 +27,40 @@ describe("gamePersistence", () => {
     expect(restoredGame.lastTickAt).toBe(300);
   });
 
+  it("restores activeEvent and scheduledEvent from save data (regression guard)", () => {
+    const game = createInitialState(1_000);
+    game.activeEvent = {
+      id: "raid-mode",
+      name: "Режим ручной блокировки",
+      multipliers: {
+        clickMultiplier: 2,
+        passiveMultiplier: 1,
+      },
+      startedAt: 1_500,
+      durationMs: 20_000,
+    };
+    game.scheduledEvent = {
+      id: "traffic-surge",
+      name: "Паника в сети",
+      multipliers: {
+        clickMultiplier: 1,
+        passiveMultiplier: 2,
+      },
+      startedAt: 25_000,
+      durationMs: 20_000,
+    };
+
+    saveGame(game, 2_000);
+    const restoredGame = loadGame(3_000);
+
+    expect(restoredGame).not.toBeNull();
+    if (!restoredGame) return;
+
+    expect(restoredGame.activeEvent).toEqual(game.activeEvent);
+    expect(restoredGame.scheduledEvent).toEqual(game.scheduledEvent);
+    expect(restoredGame.lastTickAt).toBe(3_000);
+  });
+
   it("returns null for corrupted json (edge-case)", () => {
     window.localStorage.setItem(GAME_BALANCE.saveStorageKey, "{broken");
 
