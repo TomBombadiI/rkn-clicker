@@ -23,6 +23,7 @@ describe('App smoke', () => {
     fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
 
     expect(screen.getByText(/очки блокировки: 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/^\+1$/)).toBeInTheDocument();
   });
 
   it('opens settings dialog from top bar', () => {
