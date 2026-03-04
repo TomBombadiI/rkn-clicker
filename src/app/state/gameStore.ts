@@ -19,11 +19,6 @@ type ActionErrorReason =
   | "max_locked"
   | "already_finished";
 
-export type ActionLogEntry = {
-  message: string;
-  createdAt: number;
-};
-
 export type ToastTone = "info" | "success" | "error";
 
 export type ToastView = {
@@ -69,7 +64,6 @@ type InstantEventType = keyof typeof PURCHASE_EVENTS;
 
 type GameStore = {
   game: GameState;
-  actionLog: ActionLogEntry[];
   toasts: ToastView[];
   soundEnabled: boolean;
   soundVolume: number;
@@ -89,28 +83,9 @@ type GameStore = {
   setSoundVolume: (volume: number) => void;
 };
 
-const MAX_ACTION_LOG_ENTRIES = 10;
 const MAX_VISIBLE_TOASTS = 3;
 const DEFAULT_SOUND_VOLUME = 0.6;
 let nextToastId = 0;
-
-function trimActionLog(entries: ActionLogEntry[]): ActionLogEntry[] {
-  return entries.slice(0, MAX_ACTION_LOG_ENTRIES);
-}
-
-function pushActionLog(
-  entries: ActionLogEntry[],
-  message: string,
-  now: number,
-): ActionLogEntry[] {
-  return trimActionLog([
-    {
-      message,
-      createdAt: now,
-    },
-    ...entries,
-  ]);
-}
 
 function pushToast(
   toasts: ToastView[],
@@ -156,25 +131,14 @@ function createActiveEvent(eventType: InstantEventType, now: number): ActiveEven
 
 export const useGameStore = create<GameStore>((set) => ({
   game: createInitialState(),
-  actionLog: [],
   toasts: [],
   soundEnabled: true,
   soundVolume: DEFAULT_SOUND_VOLUME,
 
   click: (now = Date.now()) => {
-    set((state) => {
-      const nextGame = applyClick(state.game, now);
-      const clickGain = Math.max(0, nextGame.score - state.game.score);
-
-      return {
-        game: nextGame,
-        actionLog: pushActionLog(
-          state.actionLog,
-          `Клик: +${Math.round(clickGain)}`,
-          now,
-        ),
-      };
-    });
+    set((state) => ({
+      game: applyClick(state.game, now),
+    }));
   },
 
   tick: (now) => {
@@ -205,11 +169,6 @@ export const useGameStore = create<GameStore>((set) => ({
           ...result.nextState,
           scheduledEvent: nextEvent,
         },
-        actionLog: pushActionLog(
-          state.actionLog,
-          `Замедление куплено: ${serviceId}`,
-          now,
-        ),
       };
     });
 
@@ -238,11 +197,6 @@ export const useGameStore = create<GameStore>((set) => ({
           ...result.nextState,
           scheduledEvent: nextEvent,
         },
-        actionLog: pushActionLog(
-          state.actionLog,
-          `Блокировка куплена: ${serviceId}`,
-          now,
-        ),
       };
     });
 
@@ -263,7 +217,6 @@ export const useGameStore = create<GameStore>((set) => ({
 
       return {
         game: result.nextState,
-        actionLog: pushActionLog(state.actionLog, "MAX заблокирован", now),
       };
     });
 
@@ -289,7 +242,6 @@ export const useGameStore = create<GameStore>((set) => ({
   saveManually: (now = Date.now()) => {
     saveGame(useGameStore.getState().game, now);
     set((state) => ({
-      actionLog: pushActionLog(state.actionLog, "Прогресс сохранен", now),
       toasts: pushToast(state.toasts, "Прогресс сохранен.", "success"),
     }));
   },
@@ -301,7 +253,6 @@ export const useGameStore = create<GameStore>((set) => ({
       game: nextGame,
       soundEnabled: state.soundEnabled,
       soundVolume: state.soundVolume,
-      actionLog: pushActionLog([], "Прогресс сброшен", now),
       toasts: pushToast([], "Прогресс сброшен.", "success"),
     }));
 
@@ -340,11 +291,6 @@ export const useGameStore = create<GameStore>((set) => ({
           activeEvent: nextEvent,
           scheduledEvent: null,
         },
-        actionLog: pushActionLog(
-          state.actionLog,
-          `Бонусное событие: "${nextEvent.name}"`,
-          now,
-        ),
       };
     });
 
@@ -354,11 +300,6 @@ export const useGameStore = create<GameStore>((set) => ({
   toggleSound: () => {
     set((state) => ({
       soundEnabled: !state.soundEnabled,
-      actionLog: pushActionLog(
-        state.actionLog,
-        state.soundEnabled ? "Звук выключен" : "Звук включен",
-        Date.now(),
-      ),
     }));
   },
 
@@ -387,10 +328,6 @@ export function selectBlockMultiplier(gameStore: GameStore): number {
 
 export function selectDissentPercent(gameStore: GameStore): number {
   return gameStore.game.dissentPercent;
-}
-
-export function selectActionLog(gameStore: GameStore): ActionLogEntry[] {
-  return gameStore.actionLog;
 }
 
 export function selectToasts(gameStore: GameStore): ToastView[] {
@@ -506,4 +443,3 @@ export function getEventBanner(game: GameState): EventBannerView {
     effects: getEventEffects(game),
   };
 }
-

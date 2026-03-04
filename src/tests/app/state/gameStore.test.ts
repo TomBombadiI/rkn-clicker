@@ -172,25 +172,10 @@ describe("gameStore", () => {
 
     useGameStore.getState().triggerInstantEvent("ban", 100);
 
-    const { game, actionLog } = useGameStore.getState();
+    const { game } = useGameStore.getState();
 
     expect(game.activeEvent?.name).toBe("Режим ручной блокировки");
     expect(game.activeEvent?.startedAt).toBe(100);
     expect(game.scheduledEvent).toBeNull();
-    expect(actionLog[0].message).toContain("Бонусное событие");
-  });
-
-  it("keeps only the last 10 action log entries (edge-case)", () => {
-    for (let i = 0; i < 11; i += 1) {
-      useGameStore.getState().click(i);
-    }
-
-    const { actionLog } = useGameStore.getState();
-
-    expect(actionLog).toHaveLength(10);
-    expect(actionLog[0].message).toBe("Клик: +1");
-    expect(actionLog[9].createdAt).toBe(1);
   });
 });
-
-

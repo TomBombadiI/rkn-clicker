@@ -92,7 +92,6 @@ describe('App smoke', () => {
     useGameStore.getState().save();
     useGameStore.setState({
       game: createInitialState(0),
-      actionLog: [],
       toasts: [],
     });
 
@@ -305,4 +304,7 @@ describe('App smoke', () => {
     expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
   });
 });
+
+
+
 
