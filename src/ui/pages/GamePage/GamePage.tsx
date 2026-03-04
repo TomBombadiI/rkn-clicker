@@ -252,6 +252,10 @@ export function GamePage() {
       syncBackgroundMusic();
     };
 
+    const handleUserInteraction = () => {
+      syncBackgroundMusic();
+    };
+
     let unsubscribeGameplayState = () => {};
     let isDisposed = false;
 
@@ -288,6 +292,8 @@ export function GamePage() {
     window.addEventListener('beforeunload', handlePageHide);
     window.addEventListener('pagehide', handlePageHide);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pointerdown', handleUserInteraction);
+    window.addEventListener('keydown', handleUserInteraction);
 
     handleVisibilityChange();
     syncGameplayState();
@@ -300,6 +306,8 @@ export function GamePage() {
       window.removeEventListener('beforeunload', handlePageHide);
       window.removeEventListener('pagehide', handlePageHide);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pointerdown', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
       backgroundMusicRef.current?.pause();
       unsubscribeGameplayState();
       yandexSdkRef.current?.stopGameplay();
@@ -360,3 +368,4 @@ export function GamePage() {
     </div>
   );
 }
+
