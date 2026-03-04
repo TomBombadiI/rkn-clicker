@@ -1,5 +1,19 @@
 .root {
   display: grid;
-  grid-template-columns: 80px 1fr 80px;
-  gap: 1rem;
+  grid-template-columns: 100px 1fr auto;
+  gap: 8px;
+  align-items: stretch;
+  padding: 0;
+}
+
+.settingsSlot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+  .root {
+    grid-template-columns: 80px 1fr auto;
+  }
 }

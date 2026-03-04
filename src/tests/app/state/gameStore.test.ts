@@ -52,6 +52,18 @@ describe("gameStore", () => {
     expect(saved.serviceProgresses.telegram).toBe("slowed");
   });
 
+  it("adds an error toast when an action fails (smoke)", () => {
+    useGameStore.setState({ toasts: [] });
+
+    useGameStore.getState().buyMax(100);
+
+    const { toasts } = useGameStore.getState();
+
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].tone).toBe("error");
+    expect(toasts[0].message).toBe("MAX пока недоступен.");
+  });
+
   it("does not apply new block multiplier retroactively when buying ban mid-tick (regression guard)", () => {
     useGameStore.setState((state) => ({
       game: {
@@ -141,6 +153,33 @@ describe("gameStore", () => {
     expect(useGameStore.getState().game.activeEvent).toBeNull();
   });
 
+  it("starts a debug event immediately and clears the scheduled one (smoke)", () => {
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        scheduledEvent: {
+          id: "traffic-surge",
+          name: "Паника в сети",
+          multipliers: {
+            clickMultiplier: 1,
+            passiveMultiplier: 2,
+          },
+          startedAt: 5_000,
+          durationMs: 20_000,
+        },
+      },
+    }));
+
+    useGameStore.getState().triggerDebugEvent("ban", 100);
+
+    const { game, actionLog } = useGameStore.getState();
+
+    expect(game.activeEvent?.name).toBe("Режим ручной блокировки");
+    expect(game.activeEvent?.startedAt).toBe(100);
+    expect(game.scheduledEvent).toBeNull();
+    expect(actionLog[0].message).toContain("Режим ручной блокировки");
+  });
+
   it("keeps only the last 10 action log entries (edge-case)", () => {
     for (let i = 0; i < 11; i += 1) {
       useGameStore.getState().click(i);
@@ -153,3 +192,4 @@ describe("gameStore", () => {
     expect(actionLog[9].createdAt).toBe(1);
   });
 });
+

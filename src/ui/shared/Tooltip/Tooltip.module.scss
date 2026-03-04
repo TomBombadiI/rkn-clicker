@@ -1,2 +1,34 @@
-.root {
+.content {
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border: 1px solid rgb(184 211 227 / 85%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 14px 28px rgb(16 40 61 / 14%);
+  color: #10283d;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  user-select: none;
+  animation: tooltip-in 160ms ease-out;
 }
+
+.arrow {
+  fill: rgb(255 255 255 / 96%);
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+

@@ -1,9 +1,9 @@
-@use "@/styles/helpers" as *;
+@use '@/styles/helpers' as *;
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgb(9 14 24 / 60%);
+  background: rgb(9 14 24 / 20%);
   backdrop-filter: blur(4px);
 }
 
@@ -15,10 +15,10 @@
   display: grid;
   gap: 16px;
   padding: 20px;
-  border: 1px solid rgb(255 255 255 / 12%);
+  border: 1px solid rgb(184 211 227 / 90%);
   border-radius: 20px;
-  background: linear-gradient(180deg, #172233 0%, #101824 100%);
-  box-shadow: 0 20px 80px rgb(0 0 0 / 35%);
+  background: linear-gradient(180deg, #f4fafd 0%, #e8f4fb 100%);
+  box-shadow: 0 20px 80px rgb(16 40 61 / 18%);
   transform: translate(-50%, -50%);
 }
 
@@ -29,12 +29,33 @@
   gap: 12px;
 }
 
+.title {
+  font-size: 1.825rem;
+  line-height: 1;
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(184 211 227 / 80%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 70%);
+  color: #174f8d;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .section {
   display: grid;
-  gap: 6px;
+  gap: 10px;
   padding: 12px;
   border-radius: 14px;
-  background: rgb(255 255 255 / 4%);
+  background: rgb(255 255 255 / 55%);
+  border: 1px solid rgb(184 211 227 / 70%);
 }
 
 .settingRow {
@@ -49,6 +70,16 @@
   gap: 6px;
 }
 
+.sectionHint {
+  font-size: 0.9rem;
+}
+
+.utilityActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 @media (max-width: 640px) {
   .content {
     width: min(94vw, 420px);
@@ -58,5 +89,9 @@
   .settingRow {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .utilityActions {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,10 +1,11 @@
 .root {
   display: grid;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid rgb(17 24 39 / 12%);
-  border-radius: 18px;
-  background: rgb(255 255 255 / 80%);
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 86%), rgb(241 245 249 / 90%));
+  box-shadow: 0 20px 36px rgb(15 23 42 / 8%);
 }
 
 .actions {
@@ -16,6 +17,7 @@
 .log {
   display: grid;
   gap: 8px;
+  padding-top: 4px;
 }
 
 .logList {
@@ -27,7 +29,8 @@
 }
 
 .logItem {
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgb(17 24 39 / 6%);
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 68%);
+  border: 1px solid rgb(226 232 240 / 90%);
 }

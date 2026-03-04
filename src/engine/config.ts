@@ -17,6 +17,7 @@ export const SERVICES = [
     {
         id: 'telegram',
         name: 'Telegram',
+        description: 'Главный чат страны: сначала все переходят сюда, потом делают вид, что это не считается соцсетью.',
         tier: 1,
         slowCost: 10,
         slowEffect: 10,
@@ -26,6 +27,7 @@ export const SERVICES = [
     {
         id: 'whatsapp',
         name: 'WhatsApp',
+        description: 'Семейный совет директоров интернета. Тут пересылают одно и то же сообщение с 2014 года.',
         tier: 1,
         slowCost: 50,
         slowEffect: 50,
@@ -35,6 +37,7 @@ export const SERVICES = [
     {
         id: 'instagram',
         name: 'Instagram',
+        description: 'Святилище еды, отпусков и лиц, которые устали от собственных фильтров.',
         tier: 1,
         slowCost: 100,
         slowEffect: 100,
@@ -44,6 +47,7 @@ export const SERVICES = [
     {
         id: 'youtube',
         name: 'YouTube',
+        description: 'Библиотека, телевидение и бездонная яма рекомендаций в одном окне.',
         tier: 1,
         slowCost: 250,
         slowEffect: 250,
@@ -53,6 +57,7 @@ export const SERVICES = [
     {
         id: 'facebook',
         name: 'Facebook',
+        description: 'Цифровой санаторий для районных чатов, старых мемов и очень важных поздравлений с яблочным спасом.',
         tier: 2,
         slowCost: 500,
         slowEffect: 500,
@@ -62,6 +67,7 @@ export const SERVICES = [
     {
         id: 'x',
         name: 'X (Twitter)',
+        description: 'Место, где каждый срочно эксперт, а кнопка переименования всё ещё переживается тяжелее реформ.',
         tier: 2,
         slowCost: 1_000,
         slowEffect: 1_000,
@@ -71,6 +77,7 @@ export const SERVICES = [
     {
         id: 'discord',
         name: 'Discord',
+        description: 'Голосовой подъезд интернета: шумно, многолюдно и у каждого свой очень срочный сервер.',
         tier: 2,
         slowCost: 2_000,
         slowEffect: 2_000,
@@ -80,6 +87,7 @@ export const SERVICES = [
     {
         id: 'tiktok',
         name: 'TikTok',
+        description: 'Вертикальная бездна, где план на пять минут стабильно превращается в потерянный вечер.',
         tier: 2,
         slowCost: 4_000,
         slowEffect: 4_000,
@@ -89,6 +97,7 @@ export const SERVICES = [
     {
         id: 'viber',
         name: 'Viber',
+        description: 'Уютный архив эпохи, когда каждый мессенджер обещал быть главным и даже в это верил.',
         tier: 3,
         slowCost: 8_000,
         slowEffect: 8_000,
@@ -98,6 +107,7 @@ export const SERVICES = [
     {
         id: 'signal',
         name: 'Signal',
+        description: 'Приложение, которое звучит как шпионский роман и поэтому всем кажется особенно серьёзным.',
         tier: 3,
         slowCost: 16_000,
         slowEffect: 16_000,
@@ -107,6 +117,7 @@ export const SERVICES = [
     {
         id: 'linkedin',
         name: 'LinkedIn',
+        description: 'Торжественная ярмарка делового оптимизма, где все одновременно вдохновлены и открыты к новым вызовам.',
         tier: 3,
         slowCost: 32_000,
         slowEffect: 32_000,
@@ -116,6 +127,7 @@ export const SERVICES = [
     {
         id: 'twitch',
         name: 'Twitch',
+        description: 'Круглосуточный фестиваль реакций, донатов и обещаний уйти спать сразу после ещё одного стрима.',
         tier: 3,
         slowCost: 64_000,
         slowEffect: 64_000,
@@ -125,6 +137,7 @@ export const SERVICES = [
     {
         id: 'steam',
         name: 'Steam',
+        description: 'Магазин скидок, замаскированный под игровую платформу. Бэклог там растёт быстрее экономики.',
         tier: 4,
         slowCost: 128_000,
         slowEffect: 128_000,
@@ -134,6 +147,7 @@ export const SERVICES = [
     {
         id: 'wikipedia',
         name: 'Wikipedia',
+        description: 'Коллективная память человечества, которую все цитируют и одновременно учат не цитировать.',
         tier: 4,
         slowCost: 256_000,
         slowEffect: 256_000,
@@ -143,6 +157,7 @@ export const SERVICES = [
     {
         id: 'reddit',
         name: 'Reddit',
+        description: 'Город форумов, где можно найти ответ на любой вопрос и сразу же три повода пожалеть, что спросил.',
         tier: 4,
         slowCost: 512_000,
         slowEffect: 512_000,
@@ -152,6 +167,7 @@ export const SERVICES = [
     {
         id: 'notion',
         name: 'Notion',
+        description: 'Место, где люди строят идеальную систему продуктивности вместо того, чтобы просто сделать задачу.',
         tier: 4,
         slowCost: 1_024_000,
         slowEffect: 1_024_000,
@@ -161,6 +177,7 @@ export const SERVICES = [
     {
         id: 'github',
         name: 'GitHub',
+        description: 'Священное хранилище коммитов, где баги получают историю изменений и публичную биографию.',
         tier: 5,
         slowCost: 2_048_000,
         slowEffect: 2_048_000,
@@ -170,6 +187,7 @@ export const SERVICES = [
     {
         id: 'cloudflare',
         name: 'Cloudflare',
+        description: 'Интернетовский турникет: сначала докажи, что ты не робот, потом уже страдай дальше.',
         tier: 5,
         slowCost: 4_096_000,
         slowEffect: 4_096_000,
@@ -179,6 +197,7 @@ export const SERVICES = [
     {
         id: 'google-play',
         name: 'Google Play',
+        description: 'Витрина, где полезные приложения соседствуют с фонариками, которые требуют доступ ко всей жизни.',
         tier: 5,
         slowCost: 8_192_000,
         slowEffect: 8_192_000,
@@ -188,6 +207,7 @@ export const SERVICES = [
     {
         id: 'discord-cdn',
         name: 'Discord CDN',
+        description: 'Склад картинок, мемов и вложений, без которого половина интернета внезапно начинает выглядеть пустой.',
         tier: 5,
         slowCost: 16_384_000,
         slowEffect: 16_384_000,
@@ -227,4 +247,6 @@ export function getEventDelayMs(randomValue = Math.random()): number {
 
     return GAME_BALANCE.eventWindowMinMs + Math.round(range * normalizedRandom);
 }
+
+
 

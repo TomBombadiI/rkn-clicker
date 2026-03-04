@@ -1,21 +1,24 @@
-import { selectDissentPercent, useGameStore } from "@/app/state";
-import { Text } from "@/ui/shared/Text";
-import styles from "./GameProgress.module.scss";
+import { selectDissentPercent, useGameStore } from '@/app/state';
+import { Tooltip } from '@/ui/shared/Tooltip';
+import styles from './GameProgress.module.scss';
 
 export function GameProgress() {
   const dissentPercent = useGameStore(selectDissentPercent);
 
   return (
-    <section className={styles.root} aria-label="Прогресс недовольства">
-      <Text as="p" variant="body-sm" weight={600}>
-        Народное недовольство: {dissentPercent}%
-      </Text>
-      <progress
-        className={styles.bar}
-        value={dissentPercent}
-        max={100}
-        aria-label="Шкала народного недовольства"
-      />
-    </section>
+    <Tooltip content="Народное недовольство. Чем выше шкала, тем ближе особая развязка." side="bottom">
+      <section className={styles.root} aria-label="Прогресс недовольства">
+        <span className={styles.emoji} aria-hidden="true">
+          📡
+        </span>
+        <progress
+          className={styles.bar}
+          value={dissentPercent}
+          max={100}
+          aria-label="Шкала народного недовольства"
+        />
+      </section>
+    </Tooltip>
   );
 }
+

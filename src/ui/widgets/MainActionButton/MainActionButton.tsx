@@ -1,27 +1,23 @@
-import { useEffect, useRef, useState } from "react";
-import { useGameStore } from "@/app/state";
-import { Button } from "@/ui/shared/Button";
-import { Text } from "@/ui/shared/Text";
-import styles from "./MainActionButton.module.scss";
+import { useRef, useState } from 'react';
+import rknLogo from '@/assets/rkn-logo.svg';
+import { useGameStore } from '@/app/state';
+import { formatCompactNumber } from '@/ui/shared/format/formatCompactNumber';
+import { Button } from '@/ui/shared/Button';
+import styles from './MainActionButton.module.scss';
 
 type ClickFeedback = {
   id: number;
   amount: number;
+  lane: number;
 };
+
+const FEEDBACK_LANES = 3;
+const MAX_VISIBLE_FEEDBACKS = 6;
 
 export function MainActionButton() {
   const click = useGameStore((state) => state.click);
   const [feedbacks, setFeedbacks] = useState<ClickFeedback[]>([]);
   const feedbackIdRef = useRef(0);
-  const timeoutIdsRef = useRef<number[]>([]);
-
-  useEffect(() => {
-    return () => {
-      timeoutIdsRef.current.forEach((timeoutId) => {
-        window.clearTimeout(timeoutId);
-      });
-    };
-  }, []);
 
   const handleClick = () => {
     const now = Date.now();
@@ -38,36 +34,43 @@ export function MainActionButton() {
     const nextId = feedbackIdRef.current + 1;
     feedbackIdRef.current = nextId;
 
-    setFeedbacks((current) => [
-      ...current,
-      {
+    setFeedbacks((current) => {
+      const nextFeedback: ClickFeedback = {
         id: nextId,
         amount,
-      },
-    ]);
+        lane: nextId % FEEDBACK_LANES,
+      };
 
-    const timeoutId = window.setTimeout(() => {
-      setFeedbacks((current) => current.filter((feedback) => feedback.id !== nextId));
-      timeoutIdsRef.current = timeoutIdsRef.current.filter((id) => id !== timeoutId);
-    }, 700);
+      return [...current, nextFeedback].slice(-MAX_VISIBLE_FEEDBACKS);
+    });
+  };
 
-    timeoutIdsRef.current.push(timeoutId);
+  const handleFeedbackEnd = (feedbackId: number) => {
+    setFeedbacks((current) => current.filter((feedback) => feedback.id !== feedbackId));
   };
 
   return (
     <section className={styles.root}>
       <div className={styles.feedbackLayer} aria-hidden="true">
         {feedbacks.map((feedback) => (
-          <span key={feedback.id} className={styles.feedback}>
-            +{feedback.amount}
+          <span
+            key={feedback.id}
+            className={styles.feedback}
+            data-lane={feedback.lane}
+            onAnimationEnd={() => handleFeedbackEnd(feedback.id)}
+          >
+            +{formatCompactNumber(feedback.amount)}
           </span>
         ))}
       </div>
 
-      <Button type="button" onClick={handleClick} className={styles.button}>
-        <Text as="span" weight={700}>
-          Блокировать
-        </Text>
+      <Button
+        type="button"
+        onClick={handleClick}
+        className={styles.button}
+        aria-label="Набрать очки блокировки"
+      >
+        <img src={rknLogo} alt="" className={styles.logo} />
       </Button>
     </section>
   );

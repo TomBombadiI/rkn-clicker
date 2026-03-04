@@ -83,3 +83,4 @@ export type BuyActionResult = {
     | 'max_locked'
     | 'already_finished',
 }
+

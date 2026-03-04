@@ -11,14 +11,31 @@ type PurchaseButtonView = {
   disabled: boolean;
 };
 
+type ActionErrorReason =
+  | "not_enough_score"
+  | "already_banned"
+  | "already_slowed"
+  | "service_not_found"
+  | "max_locked"
+  | "already_finished";
+
 export type ActionLogEntry = {
   message: string;
   createdAt: number;
 };
 
+export type ToastTone = "info" | "success" | "error";
+
+export type ToastView = {
+  id: number;
+  message: string;
+  tone: ToastTone;
+};
+
 export type ServiceCardView = {
   id: ServiceId;
   name: string;
+  description: string;
   tier: ServiceTier;
   state: ServiceState;
   slowCost: number;
@@ -36,15 +53,24 @@ export type MaxGoalView = {
   isFinished: boolean;
 };
 
+export type EventBannerEffectView = {
+  label: string;
+  tone: "buff" | "debuff";
+};
+
 export type EventBannerView = {
   name: string;
   remainingMs: number;
-  phase: "scheduled" | "active";
+  durationMs: number;
+  effects: EventBannerEffectView[];
 } | null;
+
+type DebugEventType = keyof typeof PURCHASE_EVENTS;
 
 type GameStore = {
   game: GameState;
   actionLog: ActionLogEntry[];
+  toasts: ToastView[];
   soundEnabled: boolean;
   click: (now?: number) => void;
   tick: (now?: number) => void;
@@ -53,11 +79,17 @@ type GameStore = {
   buyMax: (now?: number) => void;
   hydrate: (now?: number) => void;
   save: (now?: number) => void;
+  saveManually: (now?: number) => void;
   reset: (now?: number) => void;
+  showToast: (message: string, tone?: ToastTone) => void;
+  dismissToast: (toastId: number) => void;
+  triggerDebugEvent: (eventType: DebugEventType, now?: number) => void;
   toggleSound: () => void;
 };
 
 const MAX_ACTION_LOG_ENTRIES = 10;
+const MAX_VISIBLE_TOASTS = 3;
+let nextToastId = 0;
 
 function trimActionLog(entries: ActionLogEntry[]): ActionLogEntry[] {
   return entries.slice(0, MAX_ACTION_LOG_ENTRIES);
@@ -77,9 +109,44 @@ function pushActionLog(
   ]);
 }
 
+function pushToast(
+  toasts: ToastView[],
+  message: string,
+  tone: ToastTone,
+): ToastView[] {
+  nextToastId += 1;
+
+  return [...toasts, { id: nextToastId, message, tone }].slice(-MAX_VISIBLE_TOASTS);
+}
+
+function getActionErrorMessage(reason: ActionErrorReason): string {
+  switch (reason) {
+    case "not_enough_score":
+      return "Недостаточно очков для этого действия.";
+    case "already_banned":
+      return "Сервис уже заблокирован.";
+    case "already_slowed":
+      return "Сервис уже замедлен.";
+    case "service_not_found":
+      return "Сервис не найден.";
+    case "max_locked":
+      return "MAX пока недоступен.";
+    case "already_finished":
+      return "Игра уже завершена.";
+  }
+}
+
+function createActiveEvent(eventType: DebugEventType, now: number): ActiveEvent {
+  return {
+    ...PURCHASE_EVENTS[eventType],
+    startedAt: now,
+  };
+}
+
 export const useGameStore = create<GameStore>((set) => ({
   game: createInitialState(),
   actionLog: [],
+  toasts: [],
   soundEnabled: true,
 
   click: (now = Date.now()) => {
@@ -112,6 +179,7 @@ export const useGameStore = create<GameStore>((set) => ({
       if (!result.ok) {
         return {
           game: settledGame,
+          toasts: pushToast(state.toasts, getActionErrorMessage(result.reason), "error"),
         };
       }
 
@@ -144,6 +212,7 @@ export const useGameStore = create<GameStore>((set) => ({
       if (!result.ok) {
         return {
           game: settledGame,
+          toasts: pushToast(state.toasts, getActionErrorMessage(result.reason), "error"),
         };
       }
 
@@ -176,6 +245,7 @@ export const useGameStore = create<GameStore>((set) => ({
       if (!result.ok) {
         return {
           game: settledGame,
+          toasts: pushToast(state.toasts, getActionErrorMessage(result.reason), "error"),
         };
       }
 
@@ -202,8 +272,13 @@ export const useGameStore = create<GameStore>((set) => ({
 
   save: (now = Date.now()) => {
     saveGame(useGameStore.getState().game, now);
+  },
+
+  saveManually: (now = Date.now()) => {
+    saveGame(useGameStore.getState().game, now);
     set((state) => ({
       actionLog: pushActionLog(state.actionLog, "Прогресс сохранен", now),
+      toasts: pushToast(state.toasts, "Прогресс сохранен.", "success"),
     }));
   },
 
@@ -214,10 +289,53 @@ export const useGameStore = create<GameStore>((set) => ({
       game: nextGame,
       soundEnabled: state.soundEnabled,
       actionLog: pushActionLog([], "Прогресс сброшен", now),
+      toasts: pushToast([], "Прогресс сброшен.", "success"),
     }));
 
     clearSavedGame();
     saveGame(nextGame, now);
+  },
+
+  showToast: (message, tone = "info") => {
+    set((state) => ({
+      toasts: pushToast(state.toasts, message, tone),
+    }));
+  },
+
+  dismissToast: (toastId) => {
+    set((state) => ({
+      toasts: state.toasts.filter((toast) => toast.id !== toastId),
+    }));
+  },
+
+  triggerDebugEvent: (eventType, now = Date.now()) => {
+    set((state) => {
+      const settledGame = applyTick(state.game, now);
+
+      if (settledGame.isFinished) {
+        return {
+          game: settledGame,
+          toasts: pushToast(state.toasts, getActionErrorMessage("already_finished"), "error"),
+        };
+      }
+
+      const nextEvent = createActiveEvent(eventType, now);
+
+      return {
+        game: {
+          ...settledGame,
+          activeEvent: nextEvent,
+          scheduledEvent: null,
+        },
+        actionLog: pushActionLog(
+          state.actionLog,
+          `Dev: запущено событие \"${nextEvent.name}\"`,
+          now,
+        ),
+      };
+    });
+
+    saveGame(useGameStore.getState().game, now);
   },
 
   toggleSound: () => {
@@ -256,6 +374,10 @@ export function selectActionLog(gameStore: GameStore): ActionLogEntry[] {
   return gameStore.actionLog;
 }
 
+export function selectToasts(gameStore: GameStore): ToastView[] {
+  return gameStore.toasts;
+}
+
 export function selectSoundEnabled(gameStore: GameStore): boolean {
   return gameStore.soundEnabled;
 }
@@ -289,6 +411,7 @@ export function getServiceCards(game: GameState): ServiceCardView[] {
     return {
       id: service.id,
       name: service.name,
+      description: service.description,
       tier: service.tier,
       state: serviceState,
       slowCost: service.slowCost,
@@ -310,30 +433,57 @@ export function getMaxGoal(game: GameState): MaxGoalView {
   };
 }
 
-export function getEventBanner(game: GameState): EventBannerView {
-  if (game.activeEvent) {
-    const remainingMs = Math.max(0, game.activeEvent.startedAt + game.activeEvent.durationMs - game.lastTickAt);
-    if (remainingMs > 0) {
-      return {
-        name: game.activeEvent.name,
-        remainingMs,
-        phase: "active",
-      };
-    }
+function formatEventMultiplier(value: number): string {
+  if (Number.isInteger(value)) {
+    return value.toString();
   }
 
-  if (!game.scheduledEvent) {
+  return value.toFixed(2).replace(/\.0+$|0+$/g, "").replace(/\.$/, "");
+}
+
+function getEventEffects(game: GameState): EventBannerEffectView[] {
+  if (!game.activeEvent) {
+    return [];
+  }
+
+  const effects: EventBannerEffectView[] = [];
+  const { clickMultiplier, passiveMultiplier } = game.activeEvent.multipliers;
+
+  if (clickMultiplier !== 1) {
+    effects.push({
+      label: `Клик x${formatEventMultiplier(clickMultiplier)}`,
+      tone: clickMultiplier > 1 ? "buff" : "debuff",
+    });
+  }
+
+  if (passiveMultiplier !== 1) {
+    effects.push({
+      label: `Пассив x${formatEventMultiplier(passiveMultiplier)}`,
+      tone: passiveMultiplier > 1 ? "buff" : "debuff",
+    });
+  }
+
+  return effects;
+}
+
+export function getEventBanner(game: GameState): EventBannerView {
+  if (!game.activeEvent) {
     return null;
   }
 
-  const remainingMs = Math.max(0, game.scheduledEvent.startedAt - game.lastTickAt);
+  const remainingMs = Math.max(0, game.activeEvent.startedAt + game.activeEvent.durationMs - game.lastTickAt);
   if (remainingMs <= 0) {
     return null;
   }
 
   return {
-    name: game.scheduledEvent.name,
+    name: game.activeEvent.name,
     remainingMs,
-    phase: "scheduled",
+    durationMs: game.activeEvent.durationMs,
+    effects: getEventEffects(game),
   };
 }
+
+
+
+

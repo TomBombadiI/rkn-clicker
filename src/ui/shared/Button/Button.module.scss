@@ -1,19 +1,58 @@
-@use "@/styles/helpers" as *;
+@use '@/styles/helpers' as *;
 
 .root {
+  min-height: 44px;
+  padding: 12px 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid;
-  transition: all var(--transition-duration);
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  transition:
+    transform var(--transition-duration),
+    background-color var(--transition-duration),
+    border-color var(--transition-duration),
+    box-shadow var(--transition-duration),
+    color var(--transition-duration);
 
   @include hover {
-    background-color: #ccc;
+    transform: translateY(-1px);
   }
 
   &:active {
-    scale: 0.95;
+    transform: translateY(1px) scale(0.98);
   }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.primary {
+  border-color: rgb(154 52 18 / 20%);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 12px 24px rgb(234 88 12 / 20%);
+  color: #fff7ed;
+}
+
+.secondary {
+  border-color: rgb(14 116 144 / 18%);
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  box-shadow: 0 10px 20px rgb(6 182 212 / 10%);
+  color: #164e63;
+}
+
+.ghost {
+  border-color: rgb(148 163 184 / 30%);
+  background: rgb(255 255 255 / 55%);
+  color: #334155;
 }
 
 .circle {
@@ -21,5 +60,6 @@
 
   width: var(--circleSize);
   height: var(--circleSize);
+  padding: 0;
   border-radius: 50%;
 }

@@ -1,9 +1,25 @@
 @use '@a1rth/css-normalize';
-@use "./styles/variables.scss";
+@use './styles/variables.scss';
+
+html {
+  font-size: 16px;
+  color: #0f172a;
+  background: #e2e8f0;
+}
 
 body,
 #root {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Segoe UI',
+    'Trebuchet MS',
+    'Arial Narrow',
+    Arial,
+    sans-serif;
 }

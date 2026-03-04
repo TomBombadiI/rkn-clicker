@@ -1,11 +1,101 @@
 .gamePage {
-  display: grid;
-  gap: 16px;
-  max-width: 1023px;
-  max-height: 100dvh;
-  min-height: 360px;
-  height: 100%;
-  margin: 0 auto;
-  background-color: #eee;
-  padding: 1rem;
+  position: relative;
+  min-height: 100dvh;
+  padding: 12px;
+  background: #f4fafd;
 }
+
+.shell {
+  display: grid;
+  gap: 12px;
+  min-height: calc(100dvh - 24px);
+  grid-template-rows: auto 68px 1fr auto;
+  width: min(1024px, 100%);
+  margin: 0 auto;
+}
+
+.eventSlot {
+  display: grid;
+  align-items: stretch;
+}
+
+.eventInner {
+  min-height: 68px;
+}
+
+.mainActionArea {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+}
+
+.servicesButton {
+  position: relative;
+  width: 100%;
+  min-height: 64px;
+  border-radius: 20px;
+  font-size: 1rem;
+}
+
+.servicesLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.servicesBadge {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #174f8d;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgb(23 79 141 / 22%);
+}
+
+.toastStack {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 30;
+  width: min(calc(100vw - 24px), 420px);
+  display: grid;
+  gap: 8px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.toastStack > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 640px) {
+  .gamePage {
+    padding: 10px;
+  }
+
+  .shell {
+    min-height: calc(100dvh - 20px);
+    grid-template-rows: auto 64px 1fr auto;
+  }
+
+  .servicesBadge {
+    top: 7px;
+    right: 10px;
+  }
+
+  .toastStack {
+    top: 10px;
+    width: min(calc(100vw - 20px), 420px);
+  }
+}
+
