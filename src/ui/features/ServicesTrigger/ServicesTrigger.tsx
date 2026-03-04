@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { getMaxGoal, getServiceCards, selectGame, useGameStore } from '@/app/state';
 import { GAME_BALANCE } from '@/engine/config';
+import type { ServiceTier } from '@/engine/types';
 import { Button } from '../../shared/Button';
 import { ServiceCard } from '../../entities/ServiceCard';
 import { ServiceTierSection } from '../ServiceTierSection';
@@ -10,16 +11,18 @@ import styles from './ServicesTrigger.module.scss';
 
 type ServicesTriggerProps = {
   trigger: ReactNode;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export function ServicesTrigger({ trigger }: ServicesTriggerProps) {
+export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps) {
   const game = useGameStore(selectGame);
   const buySlow = useGameStore((state) => state.buySlow);
   const buyBan = useGameStore((state) => state.buyBan);
   const buyMax = useGameStore((state) => state.buyMax);
   const services = getServiceCards(game);
   const tiers = [...new Set(services.map((service) => service.tier))];
-  const [activeTier, setActiveTier] = useState<number>(tiers[0] ?? 1);
+  const [activeTier, setActiveTier] = useState<ServiceTier>(tiers[0] ?? 1);
+  const [open, setOpen] = useState(false);
   const maxGoal = getMaxGoal(game);
 
   useEffect(() => {
@@ -31,8 +34,13 @@ export function ServicesTrigger({ trigger }: ServicesTriggerProps) {
   const activeTierServices = services.filter((service) => service.tier === activeTier);
   const activePanelId = `services-tier-panel-${activeTier}`;
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  };
+
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
 
       <Dialog.Portal>
@@ -144,6 +152,4 @@ export function ServicesTrigger({ trigger }: ServicesTriggerProps) {
     </Dialog.Root>
   );
 }
-
-
 

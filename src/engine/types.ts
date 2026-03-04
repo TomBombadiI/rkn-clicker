@@ -8,6 +8,7 @@ export type EventId = string;
 export type ServiceConfig = {
   id: ServiceId,
   name: string,
+  description: string,
   tier: ServiceTier,
   slowCost: number,
   slowEffect: number,
@@ -83,4 +84,3 @@ export type BuyActionResult = {
     | 'max_locked'
     | 'already_finished',
 }
-

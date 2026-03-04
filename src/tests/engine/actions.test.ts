@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { applyClick, applyTick, buyBan, buySlow } from "../../engine/actions";
 import { RUNTIME_LIMITS, SERVICES } from "../../engine/config";
 import { createInitialState } from "../../engine/state";
-import type { GameState, ServiceId } from "../../engine/types";
+import type { GameState, ServiceId, ServiceState } from "../../engine/types";
 
 function makeState(overrides: Partial<GameState> = {}): GameState {
   return {
@@ -152,8 +152,8 @@ describe("buyBan", () => {
   it("sets maxUnlocked at 100% dissent (regression guard)", () => {
     const lastService = SERVICES[SERVICES.length - 1];
     const lastServiceId: ServiceId = lastService.id;
-    const allButLastBanned = Object.fromEntries(
-      SERVICES.slice(0, -1).map((service) => [service.id, "banned"]),
+    const allButLastBanned: Record<string, ServiceState> = Object.fromEntries(
+      SERVICES.slice(0, -1).map((service) => [service.id, 'banned' as ServiceState]),
     );
     const state = makeState({
       score: lastService.banCost + 1,
@@ -176,3 +176,6 @@ describe("buyBan", () => {
     expect(result.nextState.maxUnlocked).toBe(true);
   });
 });
+
+
+

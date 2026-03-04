@@ -1,7 +1,7 @@
 import { GAME_BALANCE } from '@/engine/config';
 import { useEffect, useRef } from 'react';
 import { getMaxGoal, getServiceCards, selectGame, selectToasts, useGameStore } from '@/app/state';
-import { readyYandexSdk } from '@/infra/yandex';
+import { initYandexSdk, readyYandexSdk, type YandexSdkAdapter } from '@/infra/yandex';
 import { Button } from '@/ui/shared/Button';
 import { Toast } from '@/ui/shared/Toast';
 import { ServicesTrigger } from '../../features/ServicesTrigger';
@@ -57,9 +57,62 @@ export function GamePage() {
   const availableActions = getAvailableActions(game);
   const previousAvailableKeysRef = useRef<string[] | null>(null);
   const availabilityToastsReadyRef = useRef(false);
+  const yandexSdkRef = useRef<YandexSdkAdapter | null>(null);
+  const tickIntervalIdRef = useRef<number | null>(null);
+  const gameplayStopReasonsRef = useRef(new Set<string>());
+  const isGameplayRunningRef = useRef(false);
+  const isFinishedRef = useRef(game.isFinished);
   const availableActionsCount = availableActions.length;
   const badgeCount = Math.min(availableActionsCount, MAX_BADGE_COUNT);
   const badgeLabel = availableActionsCount > MAX_BADGE_COUNT ? '9+' : String(badgeCount);
+
+  const clearTickLoop = () => {
+    if (tickIntervalIdRef.current === null) {
+      return;
+    }
+
+    window.clearInterval(tickIntervalIdRef.current);
+    tickIntervalIdRef.current = null;
+  };
+
+  const ensureTickLoop = () => {
+    if (tickIntervalIdRef.current !== null) {
+      return;
+    }
+
+    tickIntervalIdRef.current = window.setInterval(() => {
+      useGameStore.getState().tick();
+    }, 250);
+  };
+
+  const syncGameplayState = () => {
+    const shouldRun = !isFinishedRef.current && gameplayStopReasonsRef.current.size === 0;
+
+    if (shouldRun === isGameplayRunningRef.current) {
+      return;
+    }
+
+    isGameplayRunningRef.current = shouldRun;
+
+    if (shouldRun) {
+      ensureTickLoop();
+      yandexSdkRef.current?.startGameplay();
+      return;
+    }
+
+    clearTickLoop();
+    yandexSdkRef.current?.stopGameplay();
+  };
+
+  const setGameplayStopped = (reason: string, isStopped: boolean) => {
+    if (isStopped) {
+      gameplayStopReasonsRef.current.add(reason);
+    } else {
+      gameplayStopReasonsRef.current.delete(reason);
+    }
+
+    syncGameplayState();
+  };
 
   useEffect(() => {
     if (!availabilityToastsReadyRef.current) {
@@ -85,14 +138,14 @@ export function GamePage() {
   }, [availableActions, showToast]);
 
   useEffect(() => {
+    isFinishedRef.current = game.isFinished;
+    syncGameplayState();
+  }, [game.isFinished]);
+
+  useEffect(() => {
     useGameStore.getState().hydrate();
     previousAvailableKeysRef.current = getAvailableActions(useGameStore.getState().game).map((action) => action.key);
     availabilityToastsReadyRef.current = true;
-    void readyYandexSdk();
-
-    const intervalId = window.setInterval(() => {
-      useGameStore.getState().tick();
-    }, 250);
 
     const autosaveIntervalId = window.setInterval(() => {
       useGameStore.getState().save();
@@ -102,14 +155,60 @@ export function GamePage() {
       useGameStore.getState().save();
     };
 
+    const handleVisibilityChange = () => {
+      setGameplayStopped('document-hidden', document.hidden);
+    };
+
+    let unsubscribeGameplayState = () => {};
+    let isDisposed = false;
+
+    void (async () => {
+      const sdk = await initYandexSdk();
+
+      if (isDisposed) {
+        return;
+      }
+
+      yandexSdkRef.current = sdk;
+
+      const environment = sdk.getEnvironment();
+      if (environment.lang) {
+        document.documentElement.lang = environment.lang;
+      }
+
+      unsubscribeGameplayState = sdk.subscribeToGameplayState({
+        onPause: () => {
+          setGameplayStopped('yandex-sdk', true);
+        },
+        onResume: () => {
+          setGameplayStopped('yandex-sdk', false);
+        },
+      });
+
+      if (!isFinishedRef.current && gameplayStopReasonsRef.current.size === 0) {
+        sdk.startGameplay();
+      }
+
+      await readyYandexSdk();
+    })();
+
     window.addEventListener('beforeunload', handlePageHide);
     window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    handleVisibilityChange();
+    syncGameplayState();
 
     return () => {
-      window.clearInterval(intervalId);
+      isDisposed = true;
+      clearTickLoop();
       window.clearInterval(autosaveIntervalId);
       window.removeEventListener('beforeunload', handlePageHide);
       window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      unsubscribeGameplayState();
+      yandexSdkRef.current?.stopGameplay();
+      yandexSdkRef.current = null;
     };
   }, []);
 
@@ -131,7 +230,7 @@ export function GamePage() {
   return (
     <div className={s.gamePage}>
       <div className={s.shell}>
-        <TopBar />
+        <TopBar onSettingsOpenChange={(open) => setGameplayStopped('settings-modal', open)} />
 
         <div className={s.eventSlot}>
           <div className={s.eventInner}>
@@ -144,6 +243,7 @@ export function GamePage() {
         </section>
 
         <ServicesTrigger
+          onOpenChange={(open) => setGameplayStopped('services-modal', open)}
           trigger={(
             <Button type="button" className={s.servicesButton}>
               <span className={s.servicesLabel}>Блокировать</span>

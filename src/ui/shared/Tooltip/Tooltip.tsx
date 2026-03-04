@@ -1,34 +1,38 @@
-import { cloneElement, isValidElement, useMemo, useState, type ReactElement } from "react";
-import * as RadixTooltip from "@radix-ui/react-tooltip";
-import styles from "./Tooltip.module.scss";
+import { cloneElement, isValidElement, useMemo, useState, type MouseEvent, type ReactElement } from 'react';
+import * as RadixTooltip from '@radix-ui/react-tooltip';
+import styles from './Tooltip.module.scss';
 
-type TooltipSide = "top" | "right" | "bottom" | "left";
+type TooltipSide = 'top' | 'right' | 'bottom' | 'left';
+
+type TooltipTriggerProps = {
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
+};
 
 type TooltipProps = {
-  children: ReactElement;
+  children: ReactElement<TooltipTriggerProps>;
   content: string;
   side?: TooltipSide;
 };
 
 function isTouchMode(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
     return false;
   }
 
-  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+  return window.matchMedia('(hover: none), (pointer: coarse)').matches;
 }
 
-export function Tooltip({ children, content, side = "top" }: TooltipProps) {
+export function Tooltip({ children, content, side = 'top' }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const isTouch = useMemo(() => isTouchMode(), []);
 
-  if (!isValidElement(children)) {
+  if (!isValidElement<TooltipTriggerProps>(children)) {
     return children;
   }
 
-  const originalOnClick = children.props.onClick as ((event: unknown) => void) | undefined;
+  const originalOnClick = children.props.onClick;
   const trigger = cloneElement(children, {
-    onClick: (event: unknown) => {
+    onClick: (event: MouseEvent<HTMLElement>) => {
       originalOnClick?.(event);
 
       if (isTouch) {

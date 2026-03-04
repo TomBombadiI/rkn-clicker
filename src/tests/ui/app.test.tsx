@@ -1,14 +1,18 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetYandexSdkForTests } from '../../infra/yandex';
 import App from '../../App';
 import { useGameStore } from '../../app/state';
 import { GAME_BALANCE, SERVICES } from '../../engine/config';
 import { createInitialState } from '../../engine/state';
+import type { ServiceState } from '../../engine/types';
 
 describe('App smoke', () => {
   beforeEach(() => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     window.localStorage.clear();
+    delete window.YaGames;
+    resetYandexSdkForTests();
     useGameStore.getState().reset(0);
   });
 
@@ -143,16 +147,31 @@ describe('App smoke', () => {
     expect(screen.getByText(/пассив x2/i)).toBeInTheDocument();
   });
 
-  it('starts a debug event from settings', () => {
+  it('starts a bonus event from settings after rewarded ad', async () => {
+    window.YaGames = {
+      init: vi.fn(async () => ({
+        adv: {
+          showRewardedVideo: (options?: { callbacks?: { onRewarded?: () => void; onClose?: () => void } }) => {
+            options?.callbacks?.onRewarded?.();
+            options?.callbacks?.onClose?.();
+          },
+        },
+      })),
+    };
+
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^режим ручной блокировки$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /закрыть настройки/i }));
 
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /^режим ручной блокировки$/i }));
+    });
+
+    expect(screen.queryByRole('heading', { name: /настройки/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/активное событие/i)).toBeInTheDocument();
-    expect(screen.getByText(/режим ручной блокировки/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /режим ручной блокировки/i })).toBeInTheDocument();
     expect(screen.getByText(/клик x2/i)).toBeInTheDocument();
+    expect(screen.getByText(/бонус получен: режим ручной блокировки/i)).toBeInTheDocument();
   });
 
   it('saves manually, closes settings, and shows a toast', () => {
@@ -204,8 +223,8 @@ describe('App smoke', () => {
   });
 
   it('shows end screen after buying MAX', () => {
-    const bannedProgresses = Object.fromEntries(
-      SERVICES.map((service) => [service.id, 'banned']),
+    const bannedProgresses: Record<string, ServiceState> = Object.fromEntries(
+      SERVICES.map((service) => [service.id, 'banned' as ServiceState]),
     );
 
     useGameStore.setState((state) => ({
@@ -242,6 +261,7 @@ describe('App smoke', () => {
     expect(screen.getByRole('heading', { name: /сервисы/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeInTheDocument();
   });
+
   it('opens a service description modal from the question button', () => {
     render(<App />);
 
@@ -257,8 +277,6 @@ describe('App smoke', () => {
 
     expect(screen.queryByText(/главный чат страны/i)).not.toBeInTheDocument();
   });
-
-
 
   it('remembers the last active service tier tab between modal openings', () => {
     render(<App />);
@@ -276,6 +294,7 @@ describe('App smoke', () => {
     expect(screen.getByRole('tab', { name: /тир 3/i })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: /замедлить viber/i })).toBeInTheDocument();
   });
+
   it('toggles sound in settings and reflects the current state', () => {
     render(<App />);
 
@@ -286,19 +305,4 @@ describe('App smoke', () => {
     expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
   });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

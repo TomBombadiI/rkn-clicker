@@ -65,7 +65,7 @@ export type EventBannerView = {
   effects: EventBannerEffectView[];
 } | null;
 
-type DebugEventType = keyof typeof PURCHASE_EVENTS;
+type InstantEventType = keyof typeof PURCHASE_EVENTS;
 
 type GameStore = {
   game: GameState;
@@ -83,7 +83,7 @@ type GameStore = {
   reset: (now?: number) => void;
   showToast: (message: string, tone?: ToastTone) => void;
   dismissToast: (toastId: number) => void;
-  triggerDebugEvent: (eventType: DebugEventType, now?: number) => void;
+  triggerInstantEvent: (eventType: InstantEventType, now?: number) => void;
   toggleSound: () => void;
 };
 
@@ -136,7 +136,7 @@ function getActionErrorMessage(reason: ActionErrorReason): string {
   }
 }
 
-function createActiveEvent(eventType: DebugEventType, now: number): ActiveEvent {
+function createActiveEvent(eventType: InstantEventType, now: number): ActiveEvent {
   return {
     ...PURCHASE_EVENTS[eventType],
     startedAt: now,
@@ -308,7 +308,7 @@ export const useGameStore = create<GameStore>((set) => ({
     }));
   },
 
-  triggerDebugEvent: (eventType, now = Date.now()) => {
+  triggerInstantEvent: (eventType, now = Date.now()) => {
     set((state) => {
       const settledGame = applyTick(state.game, now);
 
@@ -329,7 +329,7 @@ export const useGameStore = create<GameStore>((set) => ({
         },
         actionLog: pushActionLog(
           state.actionLog,
-          `Dev: запущено событие \"${nextEvent.name}\"`,
+          `Бонусное событие: "${nextEvent.name}"`,
           now,
         ),
       };
@@ -483,7 +483,3 @@ export function getEventBanner(game: GameState): EventBannerView {
     effects: getEventEffects(game),
   };
 }
-
-
-
-

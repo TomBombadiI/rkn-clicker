@@ -153,7 +153,7 @@ describe("gameStore", () => {
     expect(useGameStore.getState().game.activeEvent).toBeNull();
   });
 
-  it("starts a debug event immediately and clears the scheduled one (smoke)", () => {
+  it("starts an instant event immediately and clears the scheduled one (smoke)", () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
@@ -170,14 +170,14 @@ describe("gameStore", () => {
       },
     }));
 
-    useGameStore.getState().triggerDebugEvent("ban", 100);
+    useGameStore.getState().triggerInstantEvent("ban", 100);
 
     const { game, actionLog } = useGameStore.getState();
 
     expect(game.activeEvent?.name).toBe("Режим ручной блокировки");
     expect(game.activeEvent?.startedAt).toBe(100);
     expect(game.scheduledEvent).toBeNull();
-    expect(actionLog[0].message).toContain("Режим ручной блокировки");
+    expect(actionLog[0].message).toContain("Бонусное событие");
   });
 
   it("keeps only the last 10 action log entries (edge-case)", () => {
@@ -192,4 +192,5 @@ describe("gameStore", () => {
     expect(actionLog[9].createdAt).toBe(1);
   });
 });
+
 
