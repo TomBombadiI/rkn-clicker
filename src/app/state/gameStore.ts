@@ -72,6 +72,7 @@ type GameStore = {
   actionLog: ActionLogEntry[];
   toasts: ToastView[];
   soundEnabled: boolean;
+  soundVolume: number;
   click: (now?: number) => void;
   tick: (now?: number) => void;
   buySlow: (serviceId: ServiceId, now?: number) => void;
@@ -85,10 +86,12 @@ type GameStore = {
   dismissToast: (toastId: number) => void;
   triggerInstantEvent: (eventType: InstantEventType, now?: number) => void;
   toggleSound: () => void;
+  setSoundVolume: (volume: number) => void;
 };
 
 const MAX_ACTION_LOG_ENTRIES = 10;
 const MAX_VISIBLE_TOASTS = 3;
+const DEFAULT_SOUND_VOLUME = 0.6;
 let nextToastId = 0;
 
 function trimActionLog(entries: ActionLogEntry[]): ActionLogEntry[] {
@@ -117,6 +120,14 @@ function pushToast(
   nextToastId += 1;
 
   return [...toasts, { id: nextToastId, message, tone }].slice(-MAX_VISIBLE_TOASTS);
+}
+
+function clampSoundVolume(volume: number): number {
+  if (Number.isNaN(volume)) {
+    return DEFAULT_SOUND_VOLUME;
+  }
+
+  return Math.min(1, Math.max(0, volume));
 }
 
 function getActionErrorMessage(reason: ActionErrorReason): string {
@@ -148,6 +159,7 @@ export const useGameStore = create<GameStore>((set) => ({
   actionLog: [],
   toasts: [],
   soundEnabled: true,
+  soundVolume: DEFAULT_SOUND_VOLUME,
 
   click: (now = Date.now()) => {
     set((state) => {
@@ -288,6 +300,7 @@ export const useGameStore = create<GameStore>((set) => ({
     set((state) => ({
       game: nextGame,
       soundEnabled: state.soundEnabled,
+      soundVolume: state.soundVolume,
       actionLog: pushActionLog([], "Прогресс сброшен", now),
       toasts: pushToast([], "Прогресс сброшен.", "success"),
     }));
@@ -348,6 +361,12 @@ export const useGameStore = create<GameStore>((set) => ({
       ),
     }));
   },
+
+  setSoundVolume: (volume) => {
+    set({
+      soundVolume: clampSoundVolume(volume),
+    });
+  },
 }));
 
 export function selectGame(gameStore: GameStore): GameState {
@@ -380,6 +399,10 @@ export function selectToasts(gameStore: GameStore): ToastView[] {
 
 export function selectSoundEnabled(gameStore: GameStore): boolean {
   return gameStore.soundEnabled;
+}
+
+export function selectSoundVolume(gameStore: GameStore): number {
+  return gameStore.soundVolume;
 }
 
 export function getServiceCards(game: GameState): ServiceCardView[] {
@@ -483,3 +506,4 @@ export function getEventBanner(game: GameState): EventBannerView {
     effects: getEventEffects(game),
   };
 }
+

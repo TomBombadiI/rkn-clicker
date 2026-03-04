@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { initYandexSdk } from '@/infra/yandex';
-import { selectSoundEnabled, useGameStore } from '@/app/state';
+import { selectSoundEnabled, selectSoundVolume, useGameStore } from '@/app/state';
 import { Button } from '../../shared/Button';
 import { Switch } from '../../shared/Switch';
 import { Text } from '../../shared/Text';
@@ -24,11 +24,14 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
   const [open, setOpen] = useState(false);
   const [bonusInFlight, setBonusInFlight] = useState<BonusEventType | null>(null);
   const soundEnabled = useGameStore(selectSoundEnabled);
+  const soundVolume = useGameStore(selectSoundVolume);
   const toggleSound = useGameStore((state) => state.toggleSound);
+  const setSoundVolume = useGameStore((state) => state.setSoundVolume);
   const saveManually = useGameStore((state) => state.saveManually);
   const reset = useGameStore((state) => state.reset);
   const showToast = useGameStore((state) => state.showToast);
   const triggerInstantEvent = useGameStore((state) => state.triggerInstantEvent);
+  const volumePercent = Math.round(soundVolume * 100);
 
   const handleModalOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -119,6 +122,25 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
               </div>
 
               <Switch checked={soundEnabled} aria-label="Переключить звук" onClick={toggleSound} />
+            </div>
+
+            <div className={styles.volumeBlock}>
+              <div className={styles.volumeHeader}>
+                <Text as="h3" variant="label" weight={600}>
+                  Громкость
+                </Text>
+                <Text tone="secondary">{volumePercent}%</Text>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={volumePercent}
+                className={styles.volumeSlider}
+                aria-label="Громкость звука"
+                onChange={(event) => setSoundVolume(Number(event.currentTarget.value) / 100)}
+              />
             </div>
           </section>
 

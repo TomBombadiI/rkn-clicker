@@ -70,6 +70,24 @@
   gap: 6px;
 }
 
+.volumeBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.volumeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.volumeSlider {
+  width: 100%;
+  accent-color: #2d8fc7;
+  cursor: pointer;
+}
+
 .sectionHint {
   font-size: 0.9rem;
 }

@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 import rknLogo from '@/assets/rkn-logo.svg';
-import { useGameStore } from '@/app/state';
+import { selectSoundEnabled, selectSoundVolume, useGameStore } from '@/app/state';
 import { formatCompactNumber } from '@/ui/shared/format/formatCompactNumber';
 import { Button } from '@/ui/shared/Button';
+import { playUiSound } from '@/ui/shared/sound/playUiSound';
+import { uiSounds } from '@/ui/shared/sound/uiSounds';
 import styles from './MainActionButton.module.scss';
 
 type ClickFeedback = {
@@ -16,6 +18,8 @@ const MAX_VISIBLE_FEEDBACKS = 6;
 
 export function MainActionButton() {
   const click = useGameStore((state) => state.click);
+  const soundEnabled = useGameStore(selectSoundEnabled);
+  const soundVolume = useGameStore(selectSoundVolume);
   const [feedbacks, setFeedbacks] = useState<ClickFeedback[]>([]);
   const feedbackIdRef = useRef(0);
 
@@ -24,6 +28,10 @@ export function MainActionButton() {
     const previousScore = useGameStore.getState().game.score;
 
     click(now);
+    playUiSound(uiSounds.click, {
+      enabled: soundEnabled,
+      volume: 0.35 * soundVolume,
+    });
 
     const nextScore = useGameStore.getState().game.score;
     const amount = Math.max(0, Math.round(nextScore - previousScore));

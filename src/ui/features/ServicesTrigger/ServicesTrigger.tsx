@@ -1,12 +1,21 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { getMaxGoal, getServiceCards, selectGame, useGameStore } from '@/app/state';
+import {
+  getMaxGoal,
+  getServiceCards,
+  selectGame,
+  selectSoundEnabled,
+  selectSoundVolume,
+  useGameStore,
+} from '@/app/state';
 import { GAME_BALANCE } from '@/engine/config';
 import type { ServiceTier } from '@/engine/types';
 import { Button } from '../../shared/Button';
 import { ServiceCard } from '../../entities/ServiceCard';
 import { ServiceTierSection } from '../ServiceTierSection';
 import { Text } from '../../shared/Text';
+import { playUiSound } from '../../shared/sound/playUiSound';
+import { uiSounds } from '../../shared/sound/uiSounds';
 import styles from './ServicesTrigger.module.scss';
 
 type ServicesTriggerProps = {
@@ -16,6 +25,8 @@ type ServicesTriggerProps = {
 
 export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps) {
   const game = useGameStore(selectGame);
+  const soundEnabled = useGameStore(selectSoundEnabled);
+  const soundVolume = useGameStore(selectSoundVolume);
   const buySlow = useGameStore((state) => state.buySlow);
   const buyBan = useGameStore((state) => state.buyBan);
   const buyMax = useGameStore((state) => state.buyMax);
@@ -37,6 +48,48 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
     onOpenChange?.(nextOpen);
+  };
+
+  const handleBuySlow = (serviceId: string) => {
+    const previousState = useGameStore.getState().game.serviceProgresses[serviceId];
+
+    buySlow(serviceId);
+
+    const nextState = useGameStore.getState().game.serviceProgresses[serviceId];
+    if (previousState !== 'slowed' && nextState === 'slowed') {
+      playUiSound(uiSounds.slow, {
+        enabled: soundEnabled,
+        volume: 0.36 * soundVolume,
+      });
+    }
+  };
+
+  const handleBuyBan = (serviceId: string) => {
+    const previousState = useGameStore.getState().game.serviceProgresses[serviceId];
+
+    buyBan(serviceId);
+
+    const nextState = useGameStore.getState().game.serviceProgresses[serviceId];
+    if (previousState !== 'banned' && nextState === 'banned') {
+      playUiSound(uiSounds.ban, {
+        enabled: soundEnabled,
+        volume: 0.4 * soundVolume,
+      });
+    }
+  };
+
+  const handleBuyMax = () => {
+    const wasFinished = useGameStore.getState().game.isFinished;
+
+    buyMax();
+
+    const isFinished = useGameStore.getState().game.isFinished;
+    if (!wasFinished && isFinished) {
+      playUiSound(uiSounds.final, {
+        enabled: soundEnabled,
+        volume: 0.42 * soundVolume,
+      });
+    }
   };
 
   return (
@@ -118,8 +171,8 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
                     slowDisabled={service.slowButton.disabled}
                     banLabel={service.banButton.label}
                     banDisabled={service.banButton.disabled}
-                    onBuySlow={() => buySlow(service.id)}
-                    onBuyBan={() => buyBan(service.id)}
+                    onBuySlow={() => handleBuySlow(service.id)}
+                    onBuyBan={() => handleBuyBan(service.id)}
                   />
                 ))}
               </ServiceTierSection>
@@ -138,7 +191,7 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
                 </Text>
                 <Button
                   type="button"
-                  onClick={() => buyMax()}
+                  onClick={handleBuyMax}
                   disabled={maxGoal.disabled}
                   aria-label="Заблокировать MAX"
                 >
@@ -152,4 +205,3 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
     </Dialog.Root>
   );
 }
-

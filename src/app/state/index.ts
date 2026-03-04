@@ -9,6 +9,7 @@ export {
   selectPassiveIncome,
   selectScore,
   selectSoundEnabled,
+  selectSoundVolume,
   selectToasts,
   useGameStore,
 } from "./gameStore";

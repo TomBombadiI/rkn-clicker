@@ -1,8 +1,19 @@
-import { GAME_BALANCE } from '@/engine/config';
 import { useEffect, useRef } from 'react';
-import { getMaxGoal, getServiceCards, selectGame, selectToasts, useGameStore } from '@/app/state';
+import backgroundMusicSrc from '@/assets/caverns.ogg';
+import { GAME_BALANCE } from '@/engine/config';
+import {
+  getMaxGoal,
+  getServiceCards,
+  selectGame,
+  selectSoundEnabled,
+  selectSoundVolume,
+  selectToasts,
+  useGameStore,
+} from '@/app/state';
 import { initYandexSdk, readyYandexSdk, type YandexSdkAdapter } from '@/infra/yandex';
 import { Button } from '@/ui/shared/Button';
+import { playUiSound } from '@/ui/shared/sound/playUiSound';
+import { uiSounds } from '@/ui/shared/sound/uiSounds';
 import { Toast } from '@/ui/shared/Toast';
 import { ServicesTrigger } from '../../features/ServicesTrigger';
 import { EndScreen } from '../../widgets/EndScreen';
@@ -49,19 +60,37 @@ function getAvailableActions(game: ReturnType<typeof selectGame>): AvailableActi
   return actions;
 }
 
+function canPlayBackgroundAudio(): boolean {
+  if (typeof Audio === 'undefined') {
+    return false;
+  }
+
+  if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)) {
+    return false;
+  }
+
+  return true;
+}
+
 export function GamePage() {
   const game = useGameStore(selectGame);
+  const soundEnabled = useGameStore(selectSoundEnabled);
+  const soundVolume = useGameStore(selectSoundVolume);
   const toasts = useGameStore(selectToasts);
   const dismissToast = useGameStore((state) => state.dismissToast);
   const showToast = useGameStore((state) => state.showToast);
   const availableActions = getAvailableActions(game);
   const previousAvailableKeysRef = useRef<string[] | null>(null);
   const availabilityToastsReadyRef = useRef(false);
+  const seenToastIdsRef = useRef(new Set<number>());
+  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const yandexSdkRef = useRef<YandexSdkAdapter | null>(null);
   const tickIntervalIdRef = useRef<number | null>(null);
   const gameplayStopReasonsRef = useRef(new Set<string>());
   const isGameplayRunningRef = useRef(false);
   const isFinishedRef = useRef(game.isFinished);
+  const soundEnabledRef = useRef(soundEnabled);
+  const soundVolumeRef = useRef(soundVolume);
   const availableActionsCount = availableActions.length;
   const badgeCount = Math.min(availableActionsCount, MAX_BADGE_COUNT);
   const badgeLabel = availableActionsCount > MAX_BADGE_COUNT ? '9+' : String(badgeCount);
@@ -114,6 +143,41 @@ export function GamePage() {
     syncGameplayState();
   };
 
+  const syncBackgroundMusic = () => {
+    if (!canPlayBackgroundAudio()) {
+      return;
+    }
+
+    if (!backgroundMusicRef.current) {
+      const audio = new Audio(backgroundMusicSrc);
+      audio.loop = true;
+      audio.preload = 'auto';
+      backgroundMusicRef.current = audio;
+    }
+
+    const audio = backgroundMusicRef.current;
+    audio.volume = 0.12 * soundVolumeRef.current;
+
+    const shouldPlay = soundEnabledRef.current && soundVolumeRef.current > 0 && !isFinishedRef.current && !document.hidden;
+
+    if (!shouldPlay) {
+      audio.pause();
+      return;
+    }
+
+    try {
+      const playback = audio.play();
+
+      if (playback && typeof playback.catch === 'function') {
+        void playback.catch(() => {
+          // Ignore autoplay restrictions until the user interacts with the page.
+        });
+      }
+    } catch {
+      // Ignore playback errors: music is optional and should not block the game.
+    }
+  };
+
   useEffect(() => {
     if (!availabilityToastsReadyRef.current) {
       return;
@@ -138,13 +202,39 @@ export function GamePage() {
   }, [availableActions, showToast]);
 
   useEffect(() => {
+    const activeToastIds = new Set(toasts.map((toast) => toast.id));
+
+    toasts.forEach((toast) => {
+      if (seenToastIdsRef.current.has(toast.id)) {
+        return;
+      }
+
+      playUiSound(toast.tone === 'error' ? uiSounds.notifyError : uiSounds.notifyGood, {
+        enabled: soundEnabled,
+        volume: (toast.tone === 'error' ? 0.42 : 0.34) * soundVolume,
+      });
+      seenToastIdsRef.current.add(toast.id);
+    });
+
+    seenToastIdsRef.current.forEach((toastId) => {
+      if (!activeToastIds.has(toastId)) {
+        seenToastIdsRef.current.delete(toastId);
+      }
+    });
+  }, [soundEnabled, soundVolume, toasts]);
+
+  useEffect(() => {
     isFinishedRef.current = game.isFinished;
+    soundEnabledRef.current = soundEnabled;
+    soundVolumeRef.current = soundVolume;
     syncGameplayState();
-  }, [game.isFinished]);
+    syncBackgroundMusic();
+  }, [game.isFinished, soundEnabled, soundVolume]);
 
   useEffect(() => {
     useGameStore.getState().hydrate();
     previousAvailableKeysRef.current = getAvailableActions(useGameStore.getState().game).map((action) => action.key);
+    seenToastIdsRef.current = new Set(useGameStore.getState().toasts.map((toast) => toast.id));
     availabilityToastsReadyRef.current = true;
 
     const autosaveIntervalId = window.setInterval(() => {
@@ -157,6 +247,7 @@ export function GamePage() {
 
     const handleVisibilityChange = () => {
       setGameplayStopped('document-hidden', document.hidden);
+      syncBackgroundMusic();
     };
 
     let unsubscribeGameplayState = () => {};
@@ -198,6 +289,7 @@ export function GamePage() {
 
     handleVisibilityChange();
     syncGameplayState();
+    syncBackgroundMusic();
 
     return () => {
       isDisposed = true;
@@ -206,6 +298,7 @@ export function GamePage() {
       window.removeEventListener('beforeunload', handlePageHide);
       window.removeEventListener('pagehide', handlePageHide);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      backgroundMusicRef.current?.pause();
       unsubscribeGameplayState();
       yandexSdkRef.current?.stopGameplay();
       yandexSdkRef.current = null;
