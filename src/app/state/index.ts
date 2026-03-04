@@ -4,11 +4,12 @@ export {
   getServiceCards,
   selectBlockMultiplier,
   selectDissentPercent,
+  selectEffectsVolume,
   selectGame,
+  selectMusicVolume,
   selectPassiveIncome,
   selectScore,
   selectSoundEnabled,
-  selectSoundVolume,
   selectToasts,
   useGameStore,
 } from "./gameStore";

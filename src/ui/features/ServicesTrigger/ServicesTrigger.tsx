@@ -3,9 +3,9 @@ import * as Dialog from '@radix-ui/react-dialog';
 import {
   getMaxGoal,
   getServiceCards,
+  selectEffectsVolume,
   selectGame,
   selectSoundEnabled,
-  selectSoundVolume,
   useGameStore,
 } from '@/app/state';
 import { GAME_BALANCE } from '@/engine/config';
@@ -26,7 +26,7 @@ type ServicesTriggerProps = {
 export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps) {
   const game = useGameStore(selectGame);
   const soundEnabled = useGameStore(selectSoundEnabled);
-  const soundVolume = useGameStore(selectSoundVolume);
+  const effectsVolume = useGameStore(selectEffectsVolume);
   const buySlow = useGameStore((state) => state.buySlow);
   const buyBan = useGameStore((state) => state.buyBan);
   const buyMax = useGameStore((state) => state.buyMax);
@@ -59,7 +59,7 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
     if (previousState !== 'slowed' && nextState === 'slowed') {
       playUiSound(uiSounds.slow, {
         enabled: soundEnabled,
-        volume: 0.36 * soundVolume,
+        volume: 0.36 * effectsVolume,
       });
     }
   };
@@ -73,7 +73,7 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
     if (previousState !== 'banned' && nextState === 'banned') {
       playUiSound(uiSounds.ban, {
         enabled: soundEnabled,
-        volume: 0.4 * soundVolume,
+        volume: 0.4 * effectsVolume,
       });
     }
   };
@@ -87,7 +87,7 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
     if (!wasFinished && isFinished) {
       playUiSound(uiSounds.final, {
         enabled: soundEnabled,
-        volume: 0.42 * soundVolume,
+        volume: 0.42 * effectsVolume,
       });
     }
   };

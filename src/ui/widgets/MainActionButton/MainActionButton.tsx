@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import rknLogo from '@/assets/rkn-logo.svg';
-import { selectSoundEnabled, selectSoundVolume, useGameStore } from '@/app/state';
+import { selectEffectsVolume, selectSoundEnabled, useGameStore } from '@/app/state';
 import { formatCompactNumber } from '@/ui/shared/format/formatCompactNumber';
 import { Button } from '@/ui/shared/Button';
 import { playUiSound } from '@/ui/shared/sound/playUiSound';
@@ -19,7 +19,7 @@ const MAX_VISIBLE_FEEDBACKS = 6;
 export function MainActionButton() {
   const click = useGameStore((state) => state.click);
   const soundEnabled = useGameStore(selectSoundEnabled);
-  const soundVolume = useGameStore(selectSoundVolume);
+  const effectsVolume = useGameStore(selectEffectsVolume);
   const [feedbacks, setFeedbacks] = useState<ClickFeedback[]>([]);
   const feedbackIdRef = useRef(0);
 
@@ -30,7 +30,7 @@ export function MainActionButton() {
     click(now);
     playUiSound(uiSounds.click, {
       enabled: soundEnabled,
-      volume: 0.35 * soundVolume,
+      volume: 0.35 * effectsVolume,
     });
 
     const nextScore = useGameStore.getState().game.score;

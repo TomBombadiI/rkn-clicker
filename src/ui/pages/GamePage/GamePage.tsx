@@ -4,9 +4,10 @@ import { GAME_BALANCE } from '@/engine/config';
 import {
   getMaxGoal,
   getServiceCards,
+  selectEffectsVolume,
   selectGame,
+  selectMusicVolume,
   selectSoundEnabled,
-  selectSoundVolume,
   selectToasts,
   useGameStore,
 } from '@/app/state';
@@ -75,7 +76,8 @@ function canPlayBackgroundAudio(): boolean {
 export function GamePage() {
   const game = useGameStore(selectGame);
   const soundEnabled = useGameStore(selectSoundEnabled);
-  const soundVolume = useGameStore(selectSoundVolume);
+  const effectsVolume = useGameStore(selectEffectsVolume);
+  const musicVolume = useGameStore(selectMusicVolume);
   const toasts = useGameStore(selectToasts);
   const dismissToast = useGameStore((state) => state.dismissToast);
   const showToast = useGameStore((state) => state.showToast);
@@ -90,7 +92,7 @@ export function GamePage() {
   const isGameplayRunningRef = useRef(false);
   const isFinishedRef = useRef(game.isFinished);
   const soundEnabledRef = useRef(soundEnabled);
-  const soundVolumeRef = useRef(soundVolume);
+  const musicVolumeRef = useRef(musicVolume);
   const availableActionsCount = availableActions.length;
   const badgeCount = Math.min(availableActionsCount, MAX_BADGE_COUNT);
   const badgeLabel = availableActionsCount > MAX_BADGE_COUNT ? '9+' : String(badgeCount);
@@ -156,9 +158,9 @@ export function GamePage() {
     }
 
     const audio = backgroundMusicRef.current;
-    audio.volume = 0.12 * soundVolumeRef.current;
+    audio.volume = 0.12 * musicVolumeRef.current;
 
-    const shouldPlay = soundEnabledRef.current && soundVolumeRef.current > 0 && !isFinishedRef.current && !document.hidden;
+    const shouldPlay = soundEnabledRef.current && musicVolumeRef.current > 0 && !isFinishedRef.current && !document.hidden;
 
     if (!shouldPlay) {
       audio.pause();
@@ -211,7 +213,7 @@ export function GamePage() {
 
       playUiSound(toast.tone === 'error' ? uiSounds.notifyError : uiSounds.notifyGood, {
         enabled: soundEnabled,
-        volume: (toast.tone === 'error' ? 0.42 : 0.34) * soundVolume,
+        volume: (toast.tone === 'error' ? 0.42 : 0.34) * effectsVolume,
       });
       seenToastIdsRef.current.add(toast.id);
     });
@@ -221,15 +223,15 @@ export function GamePage() {
         seenToastIdsRef.current.delete(toastId);
       }
     });
-  }, [soundEnabled, soundVolume, toasts]);
+  }, [effectsVolume, soundEnabled, toasts]);
 
   useEffect(() => {
     isFinishedRef.current = game.isFinished;
     soundEnabledRef.current = soundEnabled;
-    soundVolumeRef.current = soundVolume;
+    musicVolumeRef.current = musicVolume;
     syncGameplayState();
     syncBackgroundMusic();
-  }, [game.isFinished, soundEnabled, soundVolume]);
+  }, [game.isFinished, musicVolume, soundEnabled]);
 
   useEffect(() => {
     useGameStore.getState().hydrate();

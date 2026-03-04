@@ -3,8 +3,9 @@ import { applyClick, applyTick, buyBan, buyMax, buySlow } from "../../engine/act
 import { getPassiveIncomePerSec } from "../../engine/calculations";
 import { GAME_BALANCE, getEventDelayMs, PURCHASE_EVENTS } from "../../engine/config";
 import { createInitialState } from "../../engine/state";
-import { clearSavedGame, loadGame, saveGame } from "../../infra/storage";
-import type { ActiveEvent, GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
+import { clearSavedGame, loadGame, loadUiSettings, saveGame, saveUiSettings } from "../../infra/storage";
+import type { GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
+import type { ActiveEvent } from "../../engine/types";
 
 type PurchaseButtonView = {
   label: string;
@@ -66,7 +67,8 @@ type GameStore = {
   game: GameState;
   toasts: ToastView[];
   soundEnabled: boolean;
-  soundVolume: number;
+  effectsVolume: number;
+  musicVolume: number;
   click: (now?: number) => void;
   tick: (now?: number) => void;
   buySlow: (serviceId: ServiceId, now?: number) => void;
@@ -80,11 +82,13 @@ type GameStore = {
   dismissToast: (toastId: number) => void;
   triggerInstantEvent: (eventType: InstantEventType, now?: number) => void;
   toggleSound: () => void;
-  setSoundVolume: (volume: number) => void;
+  setEffectsVolume: (volume: number) => void;
+  setMusicVolume: (volume: number) => void;
 };
 
 const MAX_VISIBLE_TOASTS = 3;
-const DEFAULT_SOUND_VOLUME = 0.6;
+const DEFAULT_EFFECTS_VOLUME = 0.6;
+const DEFAULT_MUSIC_VOLUME = 0.45;
 let nextToastId = 0;
 
 function pushToast(
@@ -97,9 +101,9 @@ function pushToast(
   return [...toasts, { id: nextToastId, message, tone }].slice(-MAX_VISIBLE_TOASTS);
 }
 
-function clampSoundVolume(volume: number): number {
+function clampSoundVolume(volume: number, fallback: number): number {
   if (Number.isNaN(volume)) {
-    return DEFAULT_SOUND_VOLUME;
+    return fallback;
   }
 
   return Math.min(1, Math.max(0, volume));
@@ -129,11 +133,20 @@ function createActiveEvent(eventType: InstantEventType, now: number): ActiveEven
   };
 }
 
+function getUiSettingsSnapshot(state: Pick<GameStore, "soundEnabled" | "effectsVolume" | "musicVolume">) {
+  return {
+    soundEnabled: state.soundEnabled,
+    effectsVolume: state.effectsVolume,
+    musicVolume: state.musicVolume,
+  };
+}
+
 export const useGameStore = create<GameStore>((set) => ({
   game: createInitialState(),
   toasts: [],
   soundEnabled: true,
-  soundVolume: DEFAULT_SOUND_VOLUME,
+  effectsVolume: DEFAULT_EFFECTS_VOLUME,
+  musicVolume: DEFAULT_MUSIC_VOLUME,
 
   click: (now = Date.now()) => {
     set((state) => ({
@@ -225,14 +238,18 @@ export const useGameStore = create<GameStore>((set) => ({
 
   hydrate: (now = Date.now()) => {
     const loadedGame = loadGame(now);
+    const loadedUiSettings = loadUiSettings();
 
-    if (!loadedGame) {
+    if (!loadedGame && !loadedUiSettings) {
       return;
     }
 
-    set({
-      game: loadedGame,
-    });
+    set((state) => ({
+      game: loadedGame ?? state.game,
+      soundEnabled: loadedUiSettings?.soundEnabled ?? state.soundEnabled,
+      effectsVolume: loadedUiSettings?.effectsVolume ?? state.effectsVolume,
+      musicVolume: loadedUiSettings?.musicVolume ?? state.musicVolume,
+    }));
   },
 
   save: (now = Date.now()) => {
@@ -252,7 +269,8 @@ export const useGameStore = create<GameStore>((set) => ({
     set((state) => ({
       game: nextGame,
       soundEnabled: state.soundEnabled,
-      soundVolume: state.soundVolume,
+      effectsVolume: state.effectsVolume,
+      musicVolume: state.musicVolume,
       toasts: pushToast([], "Прогресс сброшен.", "success"),
     }));
 
@@ -298,14 +316,47 @@ export const useGameStore = create<GameStore>((set) => ({
   },
 
   toggleSound: () => {
-    set((state) => ({
-      soundEnabled: !state.soundEnabled,
-    }));
+    set((state) => {
+      const nextState = {
+        soundEnabled: !state.soundEnabled,
+      };
+
+      saveUiSettings({
+        ...getUiSettingsSnapshot(state),
+        ...nextState,
+      });
+
+      return nextState;
+    });
   },
 
-  setSoundVolume: (volume) => {
-    set({
-      soundVolume: clampSoundVolume(volume),
+  setEffectsVolume: (volume) => {
+    set((state) => {
+      const nextState = {
+        effectsVolume: clampSoundVolume(volume, DEFAULT_EFFECTS_VOLUME),
+      };
+
+      saveUiSettings({
+        ...getUiSettingsSnapshot(state),
+        ...nextState,
+      });
+
+      return nextState;
+    });
+  },
+
+  setMusicVolume: (volume) => {
+    set((state) => {
+      const nextState = {
+        musicVolume: clampSoundVolume(volume, DEFAULT_MUSIC_VOLUME),
+      };
+
+      saveUiSettings({
+        ...getUiSettingsSnapshot(state),
+        ...nextState,
+      });
+
+      return nextState;
     });
   },
 }));
@@ -338,8 +389,12 @@ export function selectSoundEnabled(gameStore: GameStore): boolean {
   return gameStore.soundEnabled;
 }
 
-export function selectSoundVolume(gameStore: GameStore): number {
-  return gameStore.soundVolume;
+export function selectEffectsVolume(gameStore: GameStore): number {
+  return gameStore.effectsVolume;
+}
+
+export function selectMusicVolume(gameStore: GameStore): number {
+  return gameStore.musicVolume;
 }
 
 export function getServiceCards(game: GameState): ServiceCardView[] {

@@ -178,4 +178,29 @@ describe("gameStore", () => {
     expect(game.activeEvent?.startedAt).toBe(100);
     expect(game.scheduledEvent).toBeNull();
   });
+
+  it("restores audio settings from localStorage on hydrate (regression guard)", () => {
+    window.localStorage.setItem(
+      GAME_BALANCE.settingsStorageKey,
+      JSON.stringify({
+        soundEnabled: false,
+        effectsVolume: 0.2,
+        musicVolume: 0.8,
+      }),
+    );
+
+    useGameStore.setState({
+      soundEnabled: true,
+      effectsVolume: 0.6,
+      musicVolume: 0.45,
+    });
+
+    useGameStore.getState().hydrate(100);
+
+    const state = useGameStore.getState();
+
+    expect(state.soundEnabled).toBe(false);
+    expect(state.effectsVolume).toBe(0.2);
+    expect(state.musicVolume).toBe(0.8);
+  });
 });

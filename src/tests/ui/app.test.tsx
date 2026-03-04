@@ -294,16 +294,25 @@ describe('App smoke', () => {
     expect(screen.getByRole('button', { name: /замедлить viber/i })).toBeInTheDocument();
   });
 
-  it('toggles sound in settings and reflects the current state', () => {
+  it('toggles sound and updates separate music/effects sliders in settings', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));
+
+    const effectsSlider = screen.getByRole('slider', { name: /громкость звуковых эффектов/i });
+    const musicSlider = screen.getByRole('slider', { name: /громкость музыки/i });
+
+    fireEvent.change(effectsSlider, { target: { value: '30' } });
+    fireEvent.change(musicSlider, { target: { value: '20' } });
     fireEvent.click(screen.getByRole('switch', { name: /переключить звук/i }));
 
+    expect(useGameStore.getState().effectsVolume).toBe(0.3);
+    expect(useGameStore.getState().musicVolume).toBe(0.2);
     expect(screen.getByRole('switch', { name: /переключить звук/i })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
   });
 });
+
 
 
 

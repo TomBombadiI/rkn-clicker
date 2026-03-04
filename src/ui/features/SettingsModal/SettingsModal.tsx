@@ -2,7 +2,12 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { initYandexSdk } from '@/infra/yandex';
-import { selectSoundEnabled, selectSoundVolume, useGameStore } from '@/app/state';
+import {
+  selectEffectsVolume,
+  selectMusicVolume,
+  selectSoundEnabled,
+  useGameStore,
+} from '@/app/state';
 import { Button } from '../../shared/Button';
 import { Switch } from '../../shared/Switch';
 import { Text } from '../../shared/Text';
@@ -24,14 +29,17 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
   const [open, setOpen] = useState(false);
   const [bonusInFlight, setBonusInFlight] = useState<BonusEventType | null>(null);
   const soundEnabled = useGameStore(selectSoundEnabled);
-  const soundVolume = useGameStore(selectSoundVolume);
+  const effectsVolume = useGameStore(selectEffectsVolume);
+  const musicVolume = useGameStore(selectMusicVolume);
   const toggleSound = useGameStore((state) => state.toggleSound);
-  const setSoundVolume = useGameStore((state) => state.setSoundVolume);
+  const setEffectsVolume = useGameStore((state) => state.setEffectsVolume);
+  const setMusicVolume = useGameStore((state) => state.setMusicVolume);
   const saveManually = useGameStore((state) => state.saveManually);
   const reset = useGameStore((state) => state.reset);
   const showToast = useGameStore((state) => state.showToast);
   const triggerInstantEvent = useGameStore((state) => state.triggerInstantEvent);
-  const volumePercent = Math.round(soundVolume * 100);
+  const effectsPercent = Math.round(effectsVolume * 100);
+  const musicPercent = Math.round(musicVolume * 100);
 
   const handleModalOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -127,19 +135,38 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
             <div className={styles.volumeBlock}>
               <div className={styles.volumeHeader}>
                 <Text as="h3" variant="label" weight={600}>
-                  Громкость
+                  Звуковые эффекты
                 </Text>
-                <Text tone="secondary">{volumePercent}%</Text>
+                <Text tone="secondary">{effectsPercent}%</Text>
               </div>
               <input
                 type="range"
                 min="0"
                 max="100"
                 step="1"
-                value={volumePercent}
+                value={effectsPercent}
                 className={styles.volumeSlider}
-                aria-label="Громкость звука"
-                onChange={(event) => setSoundVolume(Number(event.currentTarget.value) / 100)}
+                aria-label="Громкость звуковых эффектов"
+                onChange={(event) => setEffectsVolume(Number(event.currentTarget.value) / 100)}
+              />
+            </div>
+
+            <div className={styles.volumeBlock}>
+              <div className={styles.volumeHeader}>
+                <Text as="h3" variant="label" weight={600}>
+                  Музыка
+                </Text>
+                <Text tone="secondary">{musicPercent}%</Text>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={musicPercent}
+                className={styles.volumeSlider}
+                aria-label="Громкость музыки"
+                onChange={(event) => setMusicVolume(Number(event.currentTarget.value) / 100)}
               />
             </div>
           </section>

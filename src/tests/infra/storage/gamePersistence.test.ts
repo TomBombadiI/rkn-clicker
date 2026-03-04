@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { GAME_BALANCE } from "../../../engine/config";
 import { createInitialState } from "../../../engine/state";
-import { clearSavedGame, loadGame, saveGame } from "../../../infra/storage";
+import { clearSavedGame, clearUiSettings, loadGame, loadUiSettings, saveGame, saveUiSettings } from "../../../infra/storage";
 
 describe("gamePersistence", () => {
   beforeEach(() => {
     clearSavedGame();
+    clearUiSettings();
   });
 
   it("saves and restores game state (smoke)", () => {
@@ -59,6 +60,22 @@ describe("gamePersistence", () => {
     expect(restoredGame.activeEvent).toEqual(game.activeEvent);
     expect(restoredGame.scheduledEvent).toEqual(game.scheduledEvent);
     expect(restoredGame.lastTickAt).toBe(3_000);
+  });
+
+  it("saves and restores ui settings independently from game save (smoke)", () => {
+    saveUiSettings({
+      soundEnabled: false,
+      effectsVolume: 0.25,
+      musicVolume: 0.75,
+    });
+
+    const restoredSettings = loadUiSettings();
+
+    expect(restoredSettings).toEqual({
+      soundEnabled: false,
+      effectsVolume: 0.25,
+      musicVolume: 0.75,
+    });
   });
 
   it("returns null for corrupted json (edge-case)", () => {

@@ -3,6 +3,7 @@ import type { EventTemplate, ServiceConfig } from "./types";
 export const GAME_BALANCE = {
     saveVersion: 1,
     saveStorageKey: "rkn-clicker-save",
+    settingsStorageKey: "rkn-clicker-settings",
     maxBanCost: 100,
     eventWindowMinMs: 20_000,
     eventWindowMaxMs: 60_000,
@@ -247,6 +248,3 @@ export function getEventDelayMs(randomValue = Math.random()): number {
 
     return GAME_BALANCE.eventWindowMinMs + Math.round(range * normalizedRandom);
 }
-
-
-
