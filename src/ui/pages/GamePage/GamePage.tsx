@@ -333,7 +333,7 @@ export function GamePage() {
   return (
     <div className={s.gamePage}>
       <div className={s.shell}>
-        <TopBar onSettingsOpenChange={(open) => setGameplayStopped('settings-modal', open)} />
+        <TopBar />
 
         <div className={s.eventSlot}>
           <div className={s.eventInner}>
@@ -346,7 +346,6 @@ export function GamePage() {
         </section>
 
         <ServicesTrigger
-          onOpenChange={(open) => setGameplayStopped('services-modal', open)}
           trigger={(
             <Button type="button" className={s.servicesButton}>
               <span className={s.servicesLabel}>Блокировать</span>
@@ -368,4 +367,6 @@ export function GamePage() {
     </div>
   );
 }
+
+
 
