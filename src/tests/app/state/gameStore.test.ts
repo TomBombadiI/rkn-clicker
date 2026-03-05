@@ -48,7 +48,7 @@ describe("gameStore", () => {
     expect(saved.score).toBe(0);
     expect(saved.basePassiveIncome).toBe(1);
     expect(saved.activeEvent).toBeNull();
-    expect(saved.scheduledEvent.name).toBe("Паника в сети");
+    expect(saved.scheduledEvent.name).toContain("Паника в сети");
     expect(saved.serviceProgresses.linkedin).toBe("slowed");
   });
 
@@ -141,11 +141,11 @@ describe("gameStore", () => {
     useGameStore.getState().buySlow("linkedin", 100);
 
     expect(useGameStore.getState().game.activeEvent).toBeNull();
-    expect(useGameStore.getState().game.scheduledEvent?.name).toBe("Паника в сети");
+    expect(useGameStore.getState().game.scheduledEvent?.name).toContain("Паника в сети");
 
     useGameStore.getState().tick(20_100);
 
-    expect(useGameStore.getState().game.activeEvent?.name).toBe("Паника в сети");
+    expect(useGameStore.getState().game.activeEvent?.name).toContain("Паника в сети");
     expect(useGameStore.getState().game.scheduledEvent).toBeNull();
 
     useGameStore.getState().tick(40_100);
@@ -189,7 +189,7 @@ describe("gameStore", () => {
 
     const { game } = useGameStore.getState();
 
-    expect(game.activeEvent?.name).toBe("Режим ручной блокировки");
+    expect(game.activeEvent?.name).toContain("Режим ручной блокировки");
     expect(game.activeEvent?.startedAt).toBe(100);
     expect(game.scheduledEvent).toBeNull();
   });
@@ -236,5 +236,6 @@ describe("gameStore", () => {
     expect(state.musicVolume).toBe(0.8);
   });
 });
+
 
 

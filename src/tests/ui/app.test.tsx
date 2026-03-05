@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetYandexSdkForTests } from '../../infra/yandex';
 import App from '../../App';
@@ -138,7 +138,7 @@ describe('App smoke', () => {
 
     const scheduledStartAt = useGameStore.getState().game.scheduledEvent?.startedAt;
 
-    expect(useGameStore.getState().game.scheduledEvent?.name).toBe('Паника в сети');
+    expect(useGameStore.getState().game.scheduledEvent?.name).toContain('Паника в сети');
     expect(scheduledStartAt).toBeDefined();
     expect(screen.queryByLabelText(/активное событие/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /замедлить linkedin/i })).toBeDisabled();
@@ -152,7 +152,7 @@ describe('App smoke', () => {
     expect(screen.getByLabelText(/активное событие/i)).toBeInTheDocument();
     expect(screen.getByText(/паника в сети/i)).toBeInTheDocument();
     expect(screen.getByText(/осталось: 20 сек/i)).toBeInTheDocument();
-    expect(screen.getByText(/пассив x2/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/эффекты события/i)).toHaveTextContent(/пассив x2/i);
   });
 
   it('starts a bonus event from settings after rewarded ad', async () => {
@@ -169,16 +169,21 @@ describe('App smoke', () => {
 
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));
+    fireEvent.click(screen.getByRole('button', { name: /открыть настройки/i }));    await act(async () => {
+      const raidModeCardTitle = screen.getByRole('heading', { name: /режим ручной блокировки/i });
+      const raidModeCard = raidModeCardTitle.closest('article');
+      if (!raidModeCard) {
+        throw new Error('Raid mode bonus card not found');
+      }
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /^режим ручной блокировки$/i }));
+      fireEvent.click(within(raidModeCard).getByRole('button', { name: /получить бонус/i }));
     });
 
     expect(screen.queryByRole('heading', { name: /настройки/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /настройки/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/активное событие/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /режим ручной блокировки/i })).toBeInTheDocument();
-    expect(screen.getByText(/клик x2/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/эффекты события/i)).toHaveTextContent(/клик x2/i);
     expect(screen.getByText(/бонус получен: режим ручной блокировки/i)).toBeInTheDocument();
   });
 
@@ -319,4 +324,14 @@ describe('App smoke', () => {
     expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
   });
 });
+
+
+
+
+
+
+
+
+
+
 

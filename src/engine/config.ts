@@ -194,7 +194,7 @@ export const RUNTIME_LIMITS = {
 export const GAME_EVENTS = [
     {
         id: 'traffic-surge',
-        name: 'Паника в сети',
+        name: 'Паника в сети: пассив x2 (20 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1, passiveMultiplier: 2 },
         durationMs: 20_000,
@@ -203,7 +203,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'raid-mode',
-        name: 'Режим ручной блокировки',
+        name: 'Режим ручной блокировки: клик x2 (20 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 2, passiveMultiplier: 1 },
         durationMs: 20_000,
@@ -212,7 +212,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'cache-breeze',
-        name: 'Свежий кэш',
+        name: 'Свежий кэш: клик x1.2, пассив x1.5 (18 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1.2, passiveMultiplier: 1.5 },
         durationMs: 18_000,
@@ -221,7 +221,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'viral-thread',
-        name: 'Вирусный тред',
+        name: 'Вирусный тред: клик x1.8 (16 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1.8, passiveMultiplier: 1 },
         durationMs: 16_000,
@@ -230,7 +230,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'night-shift',
-        name: 'Ночная смена',
+        name: 'Ночная смена: клик x1.3, пассив x1.3 (22 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1.3, passiveMultiplier: 1.3 },
         durationMs: 22_000,
@@ -239,7 +239,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'mirror-farm',
-        name: 'Ферма зеркал',
+        name: 'Ферма зеркал: клик x2.4, пассив x1.2 (15 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 2.4, passiveMultiplier: 1.2 },
         durationMs: 15_000,
@@ -248,7 +248,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'hype-train',
-        name: 'Поезд хайпа',
+        name: 'Поезд хайпа: клик x1.1, пассив x3 (14 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1.1, passiveMultiplier: 3 },
         durationMs: 14_000,
@@ -257,7 +257,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'clean-route',
-        name: 'Чистый маршрут',
+        name: 'Чистый маршрут: клик x1.6, пассив x1.6 (12 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1.6, passiveMultiplier: 1.6 },
         durationMs: 12_000,
@@ -266,7 +266,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'slow-morning',
-        name: 'Сонное утро',
+        name: 'Сонное утро: клик x0.6, пассив x0.9 (18 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.6, passiveMultiplier: 0.9 },
         durationMs: 18_000,
@@ -275,7 +275,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'dns-chaos',
-        name: 'DNS-хаос',
+        name: 'DNS-хаос: клик x0.9, пассив x0.55 (16 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.9, passiveMultiplier: 0.55 },
         durationMs: 16_000,
@@ -284,7 +284,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'audit-day',
-        name: 'День проверок',
+        name: 'День проверок: клик x0.75, пассив x0.75 (20 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.75, passiveMultiplier: 0.75 },
         durationMs: 20_000,
@@ -293,7 +293,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'cable-cut',
-        name: 'Порезанный кабель',
+        name: 'Порезанный кабель: клик x0.5, пассив x0.8 (14 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.5, passiveMultiplier: 0.8 },
         durationMs: 14_000,
@@ -302,7 +302,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'overload',
-        name: 'Перегрузка узла',
+        name: 'Перегрузка узла: клик x0.85, пассив x0.45 (15 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.85, passiveMultiplier: 0.45 },
         durationMs: 15_000,
@@ -311,7 +311,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'shadow-ban',
-        name: 'Теневой бан',
+        name: 'Теневой бан: клик x0.65, пассив x0.65 (21 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.65, passiveMultiplier: 0.65 },
         durationMs: 21_000,
@@ -320,7 +320,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'sponsor-drop',
-        name: 'Спонсорский дроп',
+        name: 'Спонсорский дроп: +500 x множитель',
         category: 'positive',
         multipliers: { clickMultiplier: 1, passiveMultiplier: 1 },
         durationMs: 0,
@@ -330,7 +330,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'grant-committee',
-        name: 'Грантовый комитет',
+        name: 'Грантовый комитет: +2.5K x множитель',
         category: 'positive',
         multipliers: { clickMultiplier: 1, passiveMultiplier: 1 },
         durationMs: 0,
@@ -340,7 +340,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'emergency-subsidy',
-        name: 'Экстренная субсидия',
+        name: 'Экстренная субсидия: +10K x множитель',
         category: 'positive',
         multipliers: { clickMultiplier: 1, passiveMultiplier: 1 },
         durationMs: 0,
@@ -350,7 +350,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'lucky-cache',
-        name: 'Счастливый кэш',
+        name: 'Счастливый кэш: клик x1.5, пассив x1.5 (10 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 1.5, passiveMultiplier: 1.5 },
         durationMs: 10_000,
@@ -359,7 +359,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'backdoor-bonus',
-        name: 'Чёрный ход',
+        name: 'Чёрный ход: клик x2, пассив x1.2 (13 сек)',
         category: 'positive',
         multipliers: { clickMultiplier: 2, passiveMultiplier: 1.2 },
         durationMs: 13_000,
@@ -368,7 +368,7 @@ export const GAME_EVENTS = [
     },
     {
         id: 'maintenance-window',
-        name: 'Окно техработ',
+        name: 'Окно техработ: клик x0.8, пассив x0.6 (19 сек)',
         category: 'negative',
         multipliers: { clickMultiplier: 0.8, passiveMultiplier: 0.6 },
         durationMs: 19_000,
@@ -416,5 +416,6 @@ export function getEventDelayMs(randomValue = Math.random()): number {
 
     return GAME_BALANCE.eventWindowMinMs + Math.round(range * normalizedRandom);
 }
+
 
 

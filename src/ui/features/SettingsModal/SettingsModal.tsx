@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import type { EventTemplate } from '@/engine/types';
 import { initYandexSdk } from '@/infra/yandex';
 import {
   getRewardEventCards,
@@ -9,6 +10,7 @@ import {
   selectSoundEnabled,
   useGameStore,
 } from '@/app/state';
+import { formatCompactNumber } from '@/ui/shared/format/formatCompactNumber';
 import { Button } from '../../shared/Button';
 import { Switch } from '../../shared/Switch';
 import { Text } from '../../shared/Text';
@@ -18,6 +20,44 @@ type SettingsModalProps = {
   trigger: ReactNode;
   onOpenChange?: (open: boolean) => void;
 };
+
+function formatMultiplier(value: number): string {
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+
+  return value.toFixed(2).replace(/\.0+$|0+$/g, '').replace(/\.$/, '');
+}
+
+function getEventBonusDescription(event: EventTemplate): string {
+  const effects: string[] = [];
+
+  if (event.instantScoreBase && event.instantScoreBase > 0) {
+    effects.push(`Разовый бонус: +${formatCompactNumber(event.instantScoreBase)} очков x текущий множитель блокировок.`);
+  }
+
+  if (event.durationMs > 0) {
+    const timedEffects: string[] = [];
+
+    if (event.multipliers.clickMultiplier !== 1) {
+      timedEffects.push(`клик x${formatMultiplier(event.multipliers.clickMultiplier)}`);
+    }
+
+    if (event.multipliers.passiveMultiplier !== 1) {
+      timedEffects.push(`пассив x${formatMultiplier(event.multipliers.passiveMultiplier)}`);
+    }
+
+    if (timedEffects.length > 0) {
+      effects.push(`На ${Math.round(event.durationMs / 1000)} сек: ${timedEffects.join(', ')}.`);
+    }
+  }
+
+  if (effects.length === 0) {
+    return 'Бонус без изменения дохода.';
+  }
+
+  return effects.join(' ');
+}
 
 export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
   const [open, setOpen] = useState(false);
@@ -35,6 +75,11 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
   const rewardEvents = getRewardEventCards();
   const effectsPercent = Math.round(effectsVolume * 100);
   const musicPercent = Math.round(musicVolume * 100);
+
+  const rewardEventsWithDescription = useMemo(
+    () => rewardEvents.map((event) => ({ ...event, description: getEventBonusDescription(event) })),
+    [rewardEvents],
+  );
 
   const handleModalOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -54,12 +99,12 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
     handleModalOpenChange(false);
   };
 
-  const handleBonusEvent = async (eventId: Parameters<typeof triggerInstantEvent>[0], eventName: string) => {
+  const handleBonusEvent = async (event: EventTemplate) => {
     if (bonusInFlight) {
       return;
     }
 
-    setBonusInFlight(eventId);
+    setBonusInFlight(event.id);
 
     try {
       const sdk = await initYandexSdk();
@@ -70,8 +115,8 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
         return;
       }
 
-      triggerInstantEvent(eventId);
-      showToast(`Бонус получен: ${eventName}.`, 'success');
+      triggerInstantEvent(event.id);
+      showToast(`Бонус получен: ${event.name}.`, 'success');
       handleModalOpenChange(false);
     } finally {
       setBonusInFlight(null);
@@ -185,19 +230,24 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
               Бонусные события
             </Text>
             <Text tone="secondary" className={styles.sectionHint}>
-              Позитивные события и разовые бонусы за рекламу. Часть из них запускает временный баф, часть просто выдает очки сразу.
+              Показаны эффекты бонусов. Нажатие сразу запускает rewarded-рекламу.
             </Text>
-            <div className={styles.utilityActions}>
-              {rewardEvents.map((event) => (
-                <Button
-                  key={event.id}
-                  type="button"
-                  variant="secondary"
-                  disabled={bonusInFlight !== null}
-                  onClick={() => void handleBonusEvent(event.id, event.name)}
-                >
-                  {bonusInFlight === event.id ? 'Ждем награду...' : event.name}
-                </Button>
+            <div className={styles.bonusList}>
+              {rewardEventsWithDescription.map((event) => (
+                <article key={event.id} className={styles.bonusCard}>
+                  <div className={styles.bonusMeta}>
+                    <Text as="h4" variant="label" weight={600}>{event.name}</Text>
+                    <Text tone="secondary">{event.description}</Text>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={bonusInFlight !== null}
+                    onClick={() => void handleBonusEvent(event)}
+                  >
+                    {bonusInFlight === event.id ? 'Ждем награду...' : 'Получить бонус'}
+                  </Button>
+                </article>
               ))}
             </div>
           </section>
