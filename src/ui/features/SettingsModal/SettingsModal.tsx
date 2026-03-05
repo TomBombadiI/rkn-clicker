@@ -3,6 +3,7 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { initYandexSdk } from '@/infra/yandex';
 import {
+  getRewardEventCards,
   selectEffectsVolume,
   selectMusicVolume,
   selectSoundEnabled,
@@ -18,16 +19,9 @@ type SettingsModalProps = {
   onOpenChange?: (open: boolean) => void;
 };
 
-type BonusEventType = 'slow' | 'ban';
-
-const BONUS_EVENT_LABELS: Record<BonusEventType, string> = {
-  slow: 'Паника в сети',
-  ban: 'Режим ручной блокировки',
-};
-
 export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
   const [open, setOpen] = useState(false);
-  const [bonusInFlight, setBonusInFlight] = useState<BonusEventType | null>(null);
+  const [bonusInFlight, setBonusInFlight] = useState<string | null>(null);
   const soundEnabled = useGameStore(selectSoundEnabled);
   const effectsVolume = useGameStore(selectEffectsVolume);
   const musicVolume = useGameStore(selectMusicVolume);
@@ -38,6 +32,7 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
   const reset = useGameStore((state) => state.reset);
   const showToast = useGameStore((state) => state.showToast);
   const triggerInstantEvent = useGameStore((state) => state.triggerInstantEvent);
+  const rewardEvents = getRewardEventCards();
   const effectsPercent = Math.round(effectsVolume * 100);
   const musicPercent = Math.round(musicVolume * 100);
 
@@ -59,12 +54,12 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
     handleModalOpenChange(false);
   };
 
-  const handleBonusEvent = async (eventType: BonusEventType) => {
+  const handleBonusEvent = async (eventId: Parameters<typeof triggerInstantEvent>[0], eventName: string) => {
     if (bonusInFlight) {
       return;
     }
 
-    setBonusInFlight(eventType);
+    setBonusInFlight(eventId);
 
     try {
       const sdk = await initYandexSdk();
@@ -75,8 +70,8 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
         return;
       }
 
-      triggerInstantEvent(eventType);
-      showToast(`Бонус получен: ${BONUS_EVENT_LABELS[eventType]}.`, 'success');
+      triggerInstantEvent(eventId);
+      showToast(`Бонус получен: ${eventName}.`, 'success');
       handleModalOpenChange(false);
     } finally {
       setBonusInFlight(null);
@@ -190,25 +185,20 @@ export function SettingsModal({ trigger, onOpenChange }: SettingsModalProps) {
               Бонусные события
             </Text>
             <Text tone="secondary" className={styles.sectionHint}>
-              Посмотри рекламу и запусти временный эффект сразу, без ожидания обычного триггера.
+              Позитивные события и разовые бонусы за рекламу. Часть из них запускает временный баф, часть просто выдает очки сразу.
             </Text>
             <div className={styles.utilityActions}>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={bonusInFlight !== null}
-                onClick={() => void handleBonusEvent('slow')}
-              >
-                {bonusInFlight === 'slow' ? 'Ждем награду...' : 'Паника в сети'}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={bonusInFlight !== null}
-                onClick={() => void handleBonusEvent('ban')}
-              >
-                {bonusInFlight === 'ban' ? 'Ждем награду...' : 'Режим ручной блокировки'}
-              </Button>
+              {rewardEvents.map((event) => (
+                <Button
+                  key={event.id}
+                  type="button"
+                  variant="secondary"
+                  disabled={bonusInFlight !== null}
+                  onClick={() => void handleBonusEvent(event.id, event.name)}
+                >
+                  {bonusInFlight === event.id ? 'Ждем награду...' : event.name}
+                </Button>
+              ))}
             </div>
           </section>
         </Dialog.Content>

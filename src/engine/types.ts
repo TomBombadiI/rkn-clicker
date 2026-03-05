@@ -34,8 +34,12 @@ export type ScheduledEvent = ActiveEvent
 export type EventTemplate = {
   id: EventId,
   name: string,
+  category: 'positive' | 'negative',
   multipliers: EventMultipliers,
   durationMs: number,
+  rewardable: boolean,
+  rewardOnly: boolean,
+  instantScoreBase?: number,
 }
 
 export type GameState = {

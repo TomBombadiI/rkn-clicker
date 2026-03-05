@@ -34,7 +34,7 @@ describe("applyTick", () => {
 
     const next = applyTick(state, 2_000);
 
-    expect(next.score).toBe(40);
+    expect(next.score).toBe(20);
     expect(next.lastTickAt).toBe(2_000);
   });
 
@@ -176,6 +176,3 @@ describe("buyBan", () => {
     expect(result.nextState.maxUnlocked).toBe(true);
   });
 });
-
-
-

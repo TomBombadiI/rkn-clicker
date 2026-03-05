@@ -72,7 +72,7 @@ describe('App smoke', () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 10,
+        score: 30,
       },
     }));
     useGameStore.getState().save();
@@ -86,7 +86,7 @@ describe('App smoke', () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 10,
+        score: 30,
       },
     }));
     useGameStore.getState().save();
@@ -98,41 +98,41 @@ describe('App smoke', () => {
     render(<App />);
 
     expect(screen.getByText(/^1$/)).toBeInTheDocument();
-    expect(screen.queryByText(/доступно: замедлить telegram/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/доступно: замедлить linkedin/i)).not.toBeInTheDocument();
   });
 
   it('shows a toast when a new action becomes available and closes it on click', () => {
     render(<App />);
 
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       fireEvent.click(screen.getByRole('button', { name: /набрать очки блокировки/i }));
     }
 
-    const toast = screen.getByText(/доступно: замедлить telegram/i);
+    const toast = screen.getByText(/доступно: замедлить linkedin/i);
 
     expect(toast).toBeInTheDocument();
 
     fireEvent.click(toast);
 
-    expect(screen.queryByText(/доступно: замедлить telegram/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/доступно: замедлить linkedin/i)).not.toBeInTheDocument();
   });
 
   it('shows only the active event banner with its effects', () => {
     render(<App />);
 
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       fireEvent.click(screen.getByRole('button', { name: /набрать очки блокировки/i }));
     }
 
     fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /замедлить telegram/i }));
+    fireEvent.click(screen.getByRole('button', { name: /замедлить linkedin/i }));
 
     const scheduledStartAt = useGameStore.getState().game.scheduledEvent?.startedAt;
 
     expect(useGameStore.getState().game.scheduledEvent?.name).toBe('Паника в сети');
     expect(scheduledStartAt).toBeDefined();
     expect(screen.queryByLabelText(/активное событие/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /замедлить linkedin/i })).toBeDisabled();
     expect(screen.getByRole('tab', { name: /тир 1/i })).toHaveAttribute('aria-selected', 'true');
 
     fireEvent.click(screen.getByRole('button', { name: /закрыть список сервисов/i }));
@@ -205,7 +205,7 @@ describe('App smoke', () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 20,
+        score: 100,
       },
     }));
     useGameStore.getState().save();
@@ -213,12 +213,12 @@ describe('App smoke', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /заблокировать telegram/i }));
+    fireEvent.click(screen.getByRole('button', { name: /заблокировать linkedin/i }));
 
-    expect(useGameStore.getState().game.dissentPercent).toBe(5);
+    expect(useGameStore.getState().game.dissentPercent).toBe(Math.floor(100 / SERVICES.length));
     expect(screen.getByRole('tab', { name: /тир 1/i })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('button', { name: /заблокировать telegram/i })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /заблокировать linkedin/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /замедлить linkedin/i })).toBeDisabled();
   });
 
   it('shows end screen after buying MAX', () => {
@@ -229,7 +229,7 @@ describe('App smoke', () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 100,
+        score: GAME_BALANCE.maxBanCost,
         blockMultiplier: 16,
         bannedCount: SERVICES.length,
         serviceProgresses: {
@@ -258,23 +258,21 @@ describe('App smoke', () => {
     fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
 
     expect(screen.getByRole('heading', { name: /сервисы/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /замедлить linkedin/i })).toBeInTheDocument();
   });
 
   it('opens a service description modal from the question button', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /описание telegram/i }));
+    fireEvent.click(screen.getByRole('button', { name: /описание linkedin/i }));
 
-    screen.getByRole('dialog', { name: /^telegram$/i });
+    expect(screen.getByRole('dialog', { name: /^linkedin$/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^linkedin$/i })).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: /^telegram$/i })).toBeInTheDocument();
-    expect(screen.getByText(/главный чат страны/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /закрыть описание linkedin/i }));
 
-    fireEvent.click(screen.getByRole('button', { name: /закрыть описание telegram/i }));
-
-    expect(screen.queryByText(/главный чат страны/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /^linkedin$/i })).not.toBeInTheDocument();
   });
 
   it('remembers the last active service tier tab between modal openings', () => {
@@ -285,13 +283,13 @@ describe('App smoke', () => {
 
     expect(screen.getByRole('tab', { name: /тир 3/i })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { name: /тир 3/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /замедлить viber/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /закрыть список сервисов/i }));
     fireEvent.click(screen.getByRole('button', { name: /^блокировать$/i }));
 
     expect(screen.getByRole('tab', { name: /тир 3/i })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('button', { name: /замедлить viber/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /замедлить telegram/i })).toBeInTheDocument();
   });
 
   it('toggles sound and updates separate music/effects sliders in settings', () => {
@@ -312,8 +310,3 @@ describe('App smoke', () => {
     expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
   });
 });
-
-
-
-
-

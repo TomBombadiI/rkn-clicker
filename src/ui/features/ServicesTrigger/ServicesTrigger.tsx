@@ -163,6 +163,7 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
                     key={service.id}
                     name={service.name}
                     description={service.description}
+                    isBanned={service.state === "banned"}
                     slowCost={service.slowCost}
                     slowEffect={service.slowEffect}
                     banCost={service.banCost}
@@ -205,3 +206,7 @@ export function ServicesTrigger({ trigger, onOpenChange }: ServicesTriggerProps)
     </Dialog.Root>
   );
 }
+
+
+
+

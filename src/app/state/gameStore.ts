@@ -1,11 +1,16 @@
 import { create } from "zustand";
 import { applyClick, applyTick, buyBan, buyMax, buySlow } from "../../engine/actions";
 import { getPassiveIncomePerSec } from "../../engine/calculations";
-import { GAME_BALANCE, getEventDelayMs, PURCHASE_EVENTS } from "../../engine/config";
+import {
+  GAME_BALANCE,
+  getEventDelayMs,
+  getEventTemplate,
+  getRewardableEvents,
+  PURCHASE_EVENT_IDS,
+} from "../../engine/config";
 import { createInitialState } from "../../engine/state";
 import { clearSavedGame, loadGame, loadUiSettings, saveGame, saveUiSettings } from "../../infra/storage";
-import type { GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
-import type { ActiveEvent } from "../../engine/types";
+import type { ActiveEvent, EventId, EventTemplate, GameState, ServiceId, ServiceState, ServiceTier } from "../../engine/types";
 
 type PurchaseButtonView = {
   label: string;
@@ -18,7 +23,8 @@ type ActionErrorReason =
   | "already_slowed"
   | "service_not_found"
   | "max_locked"
-  | "already_finished";
+  | "already_finished"
+  | "event_not_found";
 
 export type ToastTone = "info" | "success" | "error";
 
@@ -61,8 +67,6 @@ export type EventBannerView = {
   effects: EventBannerEffectView[];
 } | null;
 
-type InstantEventType = keyof typeof PURCHASE_EVENTS;
-
 type GameStore = {
   game: GameState;
   toasts: ToastView[];
@@ -80,7 +84,7 @@ type GameStore = {
   reset: (now?: number) => void;
   showToast: (message: string, tone?: ToastTone) => void;
   dismissToast: (toastId: number) => void;
-  triggerInstantEvent: (eventType: InstantEventType, now?: number) => void;
+  triggerInstantEvent: (eventId: EventId, now?: number) => void;
   toggleSound: () => void;
   setEffectsVolume: (volume: number) => void;
   setMusicVolume: (volume: number) => void;
@@ -123,14 +127,28 @@ function getActionErrorMessage(reason: ActionErrorReason): string {
       return "MAX пока недоступен.";
     case "already_finished":
       return "Игра уже завершена.";
+    case "event_not_found":
+      return "Событие недоступно.";
   }
 }
 
-function createActiveEvent(eventType: InstantEventType, now: number): ActiveEvent {
+function createActiveEvent(template: EventTemplate, now: number): ActiveEvent {
   return {
-    ...PURCHASE_EVENTS[eventType],
+    id: template.id,
+    name: template.name,
+    multipliers: template.multipliers,
     startedAt: now,
+    durationMs: template.durationMs,
   };
+}
+
+function createScheduledEvent(eventId: EventId, startedAt: number): ActiveEvent | null {
+  const template = getEventTemplate(eventId);
+  if (!template || template.durationMs <= 0) {
+    return null;
+  }
+
+  return createActiveEvent(template, startedAt);
 }
 
 function getUiSettingsSnapshot(state: Pick<GameStore, "soundEnabled" | "effectsVolume" | "musicVolume">) {
@@ -139,6 +157,12 @@ function getUiSettingsSnapshot(state: Pick<GameStore, "soundEnabled" | "effectsV
     effectsVolume: state.effectsVolume,
     musicVolume: state.musicVolume,
   };
+}
+
+function hasVisibleTimedEffect(template: EventTemplate): boolean {
+  return template.durationMs > 0 && (
+    template.multipliers.clickMultiplier !== 1 || template.multipliers.passiveMultiplier !== 1
+  );
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -172,10 +196,7 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
-      const nextEvent: ActiveEvent = {
-        ...PURCHASE_EVENTS.slow,
-        startedAt: now + getEventDelayMs(),
-      };
+      const nextEvent = createScheduledEvent(PURCHASE_EVENT_IDS.slow, now + getEventDelayMs());
 
       return {
         game: {
@@ -200,10 +221,7 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
-      const nextEvent: ActiveEvent = {
-        ...PURCHASE_EVENTS.ban,
-        startedAt: now + getEventDelayMs(),
-      };
+      const nextEvent = createScheduledEvent(PURCHASE_EVENT_IDS.ban, now + getEventDelayMs());
 
       return {
         game: {
@@ -290,7 +308,7 @@ export const useGameStore = create<GameStore>((set) => ({
     }));
   },
 
-  triggerInstantEvent: (eventType, now = Date.now()) => {
+  triggerInstantEvent: (eventId, now = Date.now()) => {
     set((state) => {
       const settledGame = applyTick(state.game, now);
 
@@ -301,12 +319,30 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
-      const nextEvent = createActiveEvent(eventType, now);
+      const template = getEventTemplate(eventId);
+      if (!template || !template.rewardable) {
+        return {
+          game: settledGame,
+          toasts: pushToast(state.toasts, getActionErrorMessage("event_not_found"), "error"),
+        };
+      }
+
+      const grantedScore = (template.instantScoreBase ?? 0) * settledGame.blockMultiplier;
+      const nextState: GameState = {
+        ...settledGame,
+        score: settledGame.score + grantedScore,
+      };
+
+      if (!hasVisibleTimedEffect(template)) {
+        return {
+          game: nextState,
+        };
+      }
 
       return {
         game: {
-          ...settledGame,
-          activeEvent: nextEvent,
+          ...nextState,
+          activeEvent: createActiveEvent(template, now),
           scheduledEvent: null,
         },
       };
@@ -397,46 +433,61 @@ export function selectMusicVolume(gameStore: GameStore): number {
   return gameStore.musicVolume;
 }
 
+export function getRewardEventCards() {
+  return getRewardableEvents();
+}
+
 export function getServiceCards(game: GameState): ServiceCardView[] {
-  return game.serviceConfigs.map((service) => {
-    const serviceState = game.serviceProgresses[service.id];
-    const canAffordSlow = game.score >= service.slowCost;
-    const canAffordBan = game.score >= service.banCost;
+  return game.serviceConfigs
+    .map((service) => {
+      const serviceState = game.serviceProgresses[service.id];
+      const canAffordSlow = game.score >= service.slowCost;
+      const canAffordBan = game.score >= service.banCost;
 
-    let slowButton: PurchaseButtonView;
-    if (serviceState === "banned") {
-      slowButton = { label: "Недоступно", disabled: true };
-    } else if (serviceState === "slowed") {
-      slowButton = { label: "Замедлено", disabled: true };
-    } else if (!canAffordSlow) {
-      slowButton = { label: "Недостаточно очков", disabled: true };
-    } else {
-      slowButton = { label: "Замедлить", disabled: false };
-    }
+      let slowButton: PurchaseButtonView;
+      if (serviceState === "banned") {
+        slowButton = { label: "Недоступно", disabled: true };
+      } else if (serviceState === "slowed") {
+        slowButton = { label: "Замедлено", disabled: true };
+      } else if (!canAffordSlow) {
+        slowButton = { label: "Недостаточно очков", disabled: true };
+      } else {
+        slowButton = { label: "Замедлить", disabled: false };
+      }
 
-    let banButton: PurchaseButtonView;
-    if (serviceState === "banned") {
-      banButton = { label: "Заблокировано", disabled: true };
-    } else if (!canAffordBan) {
-      banButton = { label: "Недостаточно очков", disabled: true };
-    } else {
-      banButton = { label: "Заблокировать", disabled: false };
-    }
+      let banButton: PurchaseButtonView;
+      if (serviceState === "banned") {
+        banButton = { label: "Заблокировано", disabled: true };
+      } else if (!canAffordBan) {
+        banButton = { label: "Недостаточно очков", disabled: true };
+      } else {
+        banButton = { label: "Заблокировать", disabled: false };
+      }
 
-    return {
-      id: service.id,
-      name: service.name,
-      description: service.description,
-      tier: service.tier,
-      state: serviceState,
-      slowCost: service.slowCost,
-      slowEffect: service.slowEffect,
-      banCost: service.banCost,
-      banMultiplier: service.banMultiplier,
-      slowButton,
-      banButton,
-    };
-  });
+      return {
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        tier: service.tier,
+        state: serviceState,
+        slowCost: service.slowCost,
+        slowEffect: service.slowEffect,
+        banCost: service.banCost,
+        banMultiplier: service.banMultiplier,
+        slowButton,
+        banButton,
+      };
+    })
+    .sort((left, right) => {
+      const leftBanned = left.state === "banned" ? 1 : 0;
+      const rightBanned = right.state === "banned" ? 1 : 0;
+
+      if (leftBanned !== rightBanned) {
+        return leftBanned - rightBanned;
+      }
+
+      return 0;
+    });
 }
 
 export function getMaxGoal(game: GameState): MaxGoalView {
@@ -498,3 +549,4 @@ export function getEventBanner(game: GameState): EventBannerView {
     effects: getEventEffects(game),
   };
 }
+

@@ -17,7 +17,6 @@ export function isEventActive(activeEvent: ActiveEvent | null, now: number): boo
 
 export function getPassiveIncomePerSec(state: GameState): number {
     return state.basePassiveIncome * 
-        state.blockMultiplier * 
         getEventMultipliers(state.activeEvent).passiveMultiplier;
 }
 

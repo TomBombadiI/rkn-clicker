@@ -59,14 +59,14 @@ describe("getEventMultipliers", () => {
 });
 
 describe("getPassiveIncomePerSec", () => {
-  it("calculates passive income without event using base formula (smoke)", () => {
+  it("calculates passive income from base income only when no event is active (smoke)", () => {
     const state = makeState({
       basePassiveIncome: 10,
       blockMultiplier: 3,
       activeEvent: null,
     });
 
-    expect(getPassiveIncomePerSec(state)).toBe(30);
+    expect(getPassiveIncomePerSec(state)).toBe(10);
   });
 });
 
@@ -97,7 +97,7 @@ describe("event multipliers interaction", () => {
     });
 
     expect(getClickIncome(state)).toBe(60);
-    expect(getPassiveIncomePerSec(state)).toBe(140);
+    expect(getPassiveIncomePerSec(state)).toBe(70);
   });
 });
 

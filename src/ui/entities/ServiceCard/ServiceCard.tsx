@@ -8,6 +8,7 @@ import styles from "./ServiceCard.module.scss";
 type ServiceCardProps = {
   name: string;
   description: string;
+  isBanned: boolean;
   slowCost: number;
   slowEffect: number;
   banCost: number;
@@ -23,6 +24,7 @@ type ServiceCardProps = {
 export function ServiceCard({
   name,
   description,
+  isBanned,
   slowCost,
   slowEffect,
   banCost,
@@ -36,7 +38,7 @@ export function ServiceCard({
 }: ServiceCardProps) {
   return (
     <Dialog.Root>
-      <article className={styles.root}>
+      <article className={styles.root} data-banned={isBanned}>
         <div className={styles.headerRow}>
           <Tooltip content="Короткая справка о сервисе. По кнопке вопроса откроется полное описание." side="top">
             <div className={styles.header}>
@@ -130,4 +132,3 @@ export function ServiceCard({
     </Dialog.Root>
   );
 }
-

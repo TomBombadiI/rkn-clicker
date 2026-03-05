@@ -1,6 +1,7 @@
 export {
   getEventBanner,
   getMaxGoal,
+  getRewardEventCards,
   getServiceCards,
   selectBlockMultiplier,
   selectDissentPercent,

@@ -14,42 +14,42 @@ describe("gameStore", () => {
   });
 
   it("does not apply new passive income retroactively when buying slow mid-tick (regression guard)", () => {
-    useGameStore.getState().buySlow("telegram", 100);
+    useGameStore.getState().buySlow("linkedin", 100);
 
     expect(useGameStore.getState().game.score).toBe(0);
 
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       useGameStore.getState().click();
     }
 
-    useGameStore.getState().buySlow("telegram", 100);
+    useGameStore.getState().buySlow("linkedin", 100);
 
     const gameAfterPurchase = useGameStore.getState().game;
     expect(gameAfterPurchase.score).toBe(0);
-    expect(gameAfterPurchase.basePassiveIncome).toBe(10);
+    expect(gameAfterPurchase.basePassiveIncome).toBe(2);
     expect(gameAfterPurchase.lastTickAt).toBe(100);
 
     useGameStore.getState().tick(250);
 
-    expect(useGameStore.getState().game.score).toBe(1.5);
+    expect(useGameStore.getState().game.score).toBeCloseTo(0.3);
   });
 
   it("saves progress after a successful purchase (smoke)", () => {
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       useGameStore.getState().click();
     }
 
-    useGameStore.getState().buySlow("telegram", 100);
+    useGameStore.getState().buySlow("linkedin", 100);
 
     const savedRaw = window.localStorage.getItem(GAME_BALANCE.saveStorageKey);
     expect(savedRaw).not.toBeNull();
 
     const saved = JSON.parse(savedRaw ?? "{}");
     expect(saved.score).toBe(0);
-    expect(saved.basePassiveIncome).toBe(10);
+    expect(saved.basePassiveIncome).toBe(2);
     expect(saved.activeEvent).toBeNull();
     expect(saved.scheduledEvent.name).toBe("Паника в сети");
-    expect(saved.serviceProgresses.telegram).toBe("slowed");
+    expect(saved.serviceProgresses.linkedin).toBe("slowed");
   });
 
   it("adds an error toast when an action fails (smoke)", () => {
@@ -68,13 +68,13 @@ describe("gameStore", () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 20,
+        score: 100,
         basePassiveIncome: 10,
         lastTickAt: 0,
       },
     }));
 
-    useGameStore.getState().buyBan("telegram", 100);
+    useGameStore.getState().buyBan("linkedin", 100);
 
     const gameAfterPurchase = useGameStore.getState().game;
     expect(gameAfterPurchase.score).toBe(1);
@@ -83,14 +83,14 @@ describe("gameStore", () => {
 
     useGameStore.getState().tick(250);
 
-    expect(useGameStore.getState().game.score).toBe(4);
+    expect(useGameStore.getState().game.score).toBe(2.5);
   });
 
   it("finishes the game after buying MAX when it is unlocked (smoke)", () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 100,
+        score: GAME_BALANCE.maxBanCost,
         maxUnlocked: true,
         dissentPercent: 100,
         lastTickAt: 0,
@@ -134,11 +134,11 @@ describe("gameStore", () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
-        score: 10,
+        score: 30,
       },
     }));
 
-    useGameStore.getState().buySlow("telegram", 100);
+    useGameStore.getState().buySlow("linkedin", 100);
 
     expect(useGameStore.getState().game.activeEvent).toBeNull();
     expect(useGameStore.getState().game.scheduledEvent?.name).toBe("Паника в сети");
@@ -153,7 +153,7 @@ describe("gameStore", () => {
     expect(useGameStore.getState().game.activeEvent).toBeNull();
   });
 
-  it("starts an instant event immediately and clears the scheduled one (smoke)", () => {
+  it("starts an instant timed event immediately and clears the scheduled one (smoke)", () => {
     useGameStore.setState((state) => ({
       game: {
         ...state.game,
@@ -170,13 +170,30 @@ describe("gameStore", () => {
       },
     }));
 
-    useGameStore.getState().triggerInstantEvent("ban", 100);
+    useGameStore.getState().triggerInstantEvent("raid-mode", 100);
 
     const { game } = useGameStore.getState();
 
     expect(game.activeEvent?.name).toBe("Режим ручной блокировки");
     expect(game.activeEvent?.startedAt).toBe(100);
     expect(game.scheduledEvent).toBeNull();
+  });
+
+  it("grants instant score bonus events scaled by block multiplier (edge-case)", () => {
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 10,
+        blockMultiplier: 3,
+      },
+    }));
+
+    useGameStore.getState().triggerInstantEvent("sponsor-drop", 100);
+
+    const { game } = useGameStore.getState();
+
+    expect(game.score).toBe(1_510);
+    expect(game.activeEvent).toBeNull();
   });
 
   it("restores audio settings from localStorage on hydrate (regression guard)", () => {
@@ -204,3 +221,6 @@ describe("gameStore", () => {
     expect(state.musicVolume).toBe(0.8);
   });
 });
+
+
+
