@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GAME_BALANCE, GAME_EVENTS, REWARDED_EVENT_IDS, getEventDelayMs, SERVICES } from "../../engine/config";
+import { GAME_BALANCE, GAME_EVENTS, PURCHASE_EVENTS, REWARDED_EVENT_IDS, getEventDelayMs, getRandomPurchaseEventId, SERVICES } from "../../engine/config";
 
 describe("getEventDelayMs", () => {
   it("returns the minimum delay when randomValue is 0 (smoke)", () => {
@@ -31,3 +31,17 @@ describe("GAME_EVENTS", () => {
     expect(REWARDED_EVENT_IDS).toContain("sponsor-drop");
   });
 });
+
+describe("getRandomPurchaseEventId", () => {
+  it("picks events from purchasable timed pool boundaries (regression guard)", () => {
+    expect(PURCHASE_EVENTS.length).toBeGreaterThan(0);
+
+    const first = getRandomPurchaseEventId(0);
+    const last = getRandomPurchaseEventId(0.999999);
+
+    expect(first).toBe(PURCHASE_EVENTS[0].id);
+    expect(last).toBe(PURCHASE_EVENTS[PURCHASE_EVENTS.length - 1].id);
+    expect(PURCHASE_EVENTS.every((event) => event.durationMs > 0 && !event.rewardOnly)).toBe(true);
+  });
+});
+

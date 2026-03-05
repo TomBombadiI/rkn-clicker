@@ -381,14 +381,13 @@ export const EVENT_TEMPLATES = Object.fromEntries(
     GAME_EVENTS.map((event) => [event.id, event] as const),
 ) as Record<EventId, EventTemplate>;
 
-export const PURCHASE_EVENT_IDS = {
-    slow: 'traffic-surge',
-    ban: 'raid-mode',
-} as const;
-
 export const REWARDED_EVENT_IDS = GAME_EVENTS
     .filter((event) => event.rewardable && event.category === 'positive')
     .map((event) => event.id);
+
+export const PURCHASE_EVENTS = GAME_EVENTS.filter(
+    (event) => event.durationMs > 0 && !event.rewardOnly,
+);
 
 export function getEventTemplate(eventId: EventId): EventTemplate | null {
     return EVENT_TEMPLATES[eventId] ?? null;
@@ -400,9 +399,21 @@ export function getRewardableEvents(): EventTemplate[] {
         .filter((event): event is EventTemplate => Boolean(event));
 }
 
+export function getRandomPurchaseEventId(randomValue = Math.random()): EventId {
+    if (PURCHASE_EVENTS.length === 0) {
+        return 'traffic-surge';
+    }
+
+    const normalizedRandom = Math.min(Math.max(randomValue, 0), 0.999999999999);
+    const index = Math.floor(normalizedRandom * PURCHASE_EVENTS.length);
+
+    return PURCHASE_EVENTS[index].id;
+}
+
 export function getEventDelayMs(randomValue = Math.random()): number {
     const normalizedRandom = Math.min(Math.max(randomValue, 0), 1);
     const range = GAME_BALANCE.eventWindowMaxMs - GAME_BALANCE.eventWindowMinMs;
 
     return GAME_BALANCE.eventWindowMinMs + Math.round(range * normalizedRandom);
 }
+

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GAME_BALANCE, SERVICES } from "../../../engine/config";
+import { GAME_BALANCE, PURCHASE_EVENTS, SERVICES } from "../../../engine/config";
 import { useGameStore } from "../../../app/state";
 
 describe("gameStore", () => {
@@ -153,6 +153,21 @@ describe("gameStore", () => {
     expect(useGameStore.getState().game.activeEvent).toBeNull();
   });
 
+
+  it("uses random purchase event selection instead of fixed id (regression guard)", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.999999);
+
+    useGameStore.setState((state) => ({
+      game: {
+        ...state.game,
+        score: 30,
+      },
+    }));
+
+    useGameStore.getState().buySlow("linkedin", 100);
+
+    expect(useGameStore.getState().game.scheduledEvent?.id).toBe(PURCHASE_EVENTS[PURCHASE_EVENTS.length - 1].id);
+  });
   it("starts an instant timed event immediately and clears the scheduled one (smoke)", () => {
     useGameStore.setState((state) => ({
       game: {
@@ -221,6 +236,4 @@ describe("gameStore", () => {
     expect(state.musicVolume).toBe(0.8);
   });
 });
-
-
 

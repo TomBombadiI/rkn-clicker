@@ -5,8 +5,8 @@ import {
   GAME_BALANCE,
   getEventDelayMs,
   getEventTemplate,
+  getRandomPurchaseEventId,
   getRewardableEvents,
-  PURCHASE_EVENT_IDS,
 } from "../../engine/config";
 import { createInitialState } from "../../engine/state";
 import { clearSavedGame, loadGame, loadUiSettings, saveGame, saveUiSettings } from "../../infra/storage";
@@ -196,7 +196,7 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
-      const nextEvent = createScheduledEvent(PURCHASE_EVENT_IDS.slow, now + getEventDelayMs());
+      const nextEvent = createScheduledEvent(getRandomPurchaseEventId(), now + getEventDelayMs());
 
       return {
         game: {
@@ -221,7 +221,7 @@ export const useGameStore = create<GameStore>((set) => ({
         };
       }
 
-      const nextEvent = createScheduledEvent(PURCHASE_EVENT_IDS.ban, now + getEventDelayMs());
+      const nextEvent = createScheduledEvent(getRandomPurchaseEventId(), now + getEventDelayMs());
 
       return {
         game: {
