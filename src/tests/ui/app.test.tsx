@@ -20,6 +20,15 @@ describe('App smoke', () => {
     vi.restoreAllMocks();
   });
 
+  it('prevents default on repeated Enter keydown for the main action button (regression guard)', () => {
+    render(<App />);
+
+    const mainButton = screen.getByRole('button', { name: /набрать очки блокировки/i });
+
+    expect(fireEvent.keyDown(mainButton, { key: 'Enter', code: 'Enter', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(mainButton, { key: ' ', code: 'Space', repeat: true })).toBe(false);
+    expect(fireEvent.keyDown(mainButton, { key: 'Enter', code: 'Enter', repeat: false })).toBe(true);
+  });
   it('increments score after clicking the main action button', () => {
     render(<App />);
 
@@ -310,3 +319,4 @@ describe('App smoke', () => {
     expect(screen.getByText(/звуковые эффекты отключены/i)).toBeInTheDocument();
   });
 });
+

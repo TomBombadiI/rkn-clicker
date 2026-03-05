@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import rknLogo from '@/assets/rkn-logo.svg';
 import { selectEffectsVolume, selectSoundEnabled, useGameStore } from '@/app/state';
 import { formatCompactNumber } from '@/ui/shared/format/formatCompactNumber';
@@ -57,6 +57,14 @@ export function MainActionButton() {
     setFeedbacks((current) => current.filter((feedback) => feedback.id !== feedbackId));
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+
+    if (event.repeat && isActivationKey) {
+      event.preventDefault();
+    }
+  };
+
   return (
     <section className={styles.root}>
       <div className={styles.feedbackLayer} aria-hidden="true">
@@ -75,6 +83,7 @@ export function MainActionButton() {
       <Button
         type="button"
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         className={styles.button}
         aria-label="Набрать очки блокировки"
       >
