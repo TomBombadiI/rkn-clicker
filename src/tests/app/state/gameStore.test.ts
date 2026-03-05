@@ -26,12 +26,12 @@ describe("gameStore", () => {
 
     const gameAfterPurchase = useGameStore.getState().game;
     expect(gameAfterPurchase.score).toBe(0);
-    expect(gameAfterPurchase.basePassiveIncome).toBe(2);
+    expect(gameAfterPurchase.basePassiveIncome).toBe(1);
     expect(gameAfterPurchase.lastTickAt).toBe(100);
 
     useGameStore.getState().tick(250);
 
-    expect(useGameStore.getState().game.score).toBeCloseTo(0.3);
+    expect(useGameStore.getState().game.score).toBeCloseTo(0.15);
   });
 
   it("saves progress after a successful purchase (smoke)", () => {
@@ -46,7 +46,7 @@ describe("gameStore", () => {
 
     const saved = JSON.parse(savedRaw ?? "{}");
     expect(saved.score).toBe(0);
-    expect(saved.basePassiveIncome).toBe(2);
+    expect(saved.basePassiveIncome).toBe(1);
     expect(saved.activeEvent).toBeNull();
     expect(saved.scheduledEvent.name).toBe("Паника в сети");
     expect(saved.serviceProgresses.linkedin).toBe("slowed");
@@ -236,4 +236,5 @@ describe("gameStore", () => {
     expect(state.musicVolume).toBe(0.8);
   });
 });
+
 
